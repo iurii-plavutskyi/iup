@@ -1,0 +1,117 @@
+<html>
+
+<head>
+<link rel="stylesheet" href="css/grid.css" />
+<script type="text/javascript" src="js/adds/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="js/iup/Utils.js"></script>
+<script type="text/javascript" src="js/iup/Layout.js"></script>
+<script type="text/javascript" src="js/iup/Button.js"></script>
+<script type="text/javascript" src="js/iup/Grid.js"></script>
+<script type="text/javascript" src="js/iup/EventManager.js"></script>
+<script type="text/javascript" src="js/iup/Store.js"></script>
+
+<script type="text/javascript">
+	$(document).ready( function() {
+		var el = new iup.layout.Element({style: {border : '1px solid', backgroundColor:'#999', width : '100px', height : '100px'}});
+		var panel = new iup.layout.Panel({style: {backgroundColor:'#aff'}, items : [el]});
+	
+		
+		var stretchPanel = new iup.layout.StretchPanel({
+			style: {border : '1px solid #009', backgroundColor:'#fff', padding : '5px'},
+			content : new iup.layout.StretchPanel({
+				style: {border : '1px solid #090', backgroundColor:'#555', padding : '5px'},
+				content	: panel
+			})
+		});
+		
+		var grid = new iup.layout.Grid({
+			columns : [
+			    {header : "Info", key : "name", 
+			    	renderer : function(value, record) {   
+			    		var ret = [];
+			    		ret.push('First Name : ' + record.get('name'));
+			    		ret.push('Last Name : ' + record.get('lastName'));
+			    		ret.push('Age : ' + record.get('age'));
+			    		return ret.join('<br/>');
+			    	}
+			    },
+				{header : "Name", key : "name"},
+				{header : "Last Name adsasfda asdasda asd adsa adsasfda asdasda asd adsa adsasfda asdasda asd adsa", key : "lastName", width : 150},
+				{header : "Age", key : "age", width : 50, fixed : true}       
+			],
+			emptyText : "no data",
+			store : new iup.data.Store({
+				data : [{name:"Name1", lastName:"LastName1", age : 30},
+				        {name:"Name2", lastName:"LastName2", age : 31},
+				     //   {name:"Name3", lastName:"LastName3", age : 32},
+				        {name:"Name4", lastName:"LastName4", age : 33}],
+				autoLoad : false
+				
+			})
+			
+		})
+		
+		var borderPanel = new iup.layout.BorderPanel({
+			layoutConfig : {top : 150, bottom : 30, left : 100, right : 50},
+			top 	: new iup.layout.TabPanel({
+				style	: {backgroundColor:'#aff'},
+				items	: [
+					{title : "A", content : new iup.layout.Panel({style: {backgroundColor:'#aaf'}})},     	   
+					{title : "B", content : grid/*new util.layout.Panel({style: {backgroundColor:'#afa'}})*/}, 
+					{title : "C", content : new iup.layout.Panel({style: {backgroundColor:'#faa'}})},     	 
+				]
+			}),
+			bottom 	: new iup.layout.Toolbar({
+				style	: {backgroundColor:'#aaf', padding : '5px'},
+				marginBetweenItems : 5,
+				items	: [
+		     		new iup.Button({text:"A", className : 'button edit'}), 
+					'->', 
+					new iup.Button({text:"B", className : 'button delete'}),
+					new iup.Button({text:"C", className : 'button add'}) 
+		     	]
+			}),
+			left 	: new iup.layout.Panel({style: {backgroundColor:'#aaa'}}),
+			right 	: new iup.layout.Panel({style: {backgroundColor:'#faa'}}),
+			center	: stretchPanel
+		});
+		
+		document.getElementsByTagName("body")[0].appendChild(borderPanel.getEl());
+		
+		new iup.layout.ViewPort({
+			content : borderPanel
+		});
+		
+		/*var win = new util.Window({
+			title : "someTitle",
+			width: 200,
+			height : 150,
+			modal : false,
+			minimizable : true
+			
+		});
+		win.show();
+		
+		new util.Window({
+			title : "someTitle2",
+			width: 200,
+			height : 150,
+			//modal : false,
+			minimizable : true
+			
+		}).show();
+		
+		new util.Window({
+			title : "someTitle3",
+			width: 200,
+			height : 150,
+			modal : false,
+			minimizable : true
+			
+		}).show();*/
+	});
+</script>
+
+</head>
+<body style="margin:0px;"></body>
+</html>
