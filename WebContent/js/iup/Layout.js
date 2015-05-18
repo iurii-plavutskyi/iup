@@ -86,6 +86,209 @@ iup.utils.createComponent('iup.layout.Element', undefined,
 				}
 			}
 		});
+		
+iup.utils.createComponent('iup.layout.ScrollPanel', iup.layout.Panel, 
+	function () {
+	
+		function getLineHeight(elem) {
+           /* var $elem = $(elem),
+                $parent = $elem['offsetParent' in $.fn ? 'offsetParent' : 'parent']();
+            if (!$parent.length) {
+                $parent = $('body');
+            }*/
+            return /*parseInt($parent.css('fontSize'), 10) || */parseInt($(elem).css('fontSize'), 10) || 16;
+        }
+
+        function getPageHeight(elem) {
+            return $(elem).height();
+        }
+		
+		function fixEvent(evt, el) {
+			if (this.cfg.step) {
+				evt.dX = evt.deltaX > 0 ? this.cfg.step : (evt.deltaX < 0 ? -this.cfg.step : 0);
+				evt.dY = evt.deltaY > 0 ? this.cfg.step : (evt.deltaY < 0 ? -this.cfg.step : 0);
+			} else {
+				var scale = 1;
+				if (evt.deltaMode === 1) {
+					scale = getLineHeight(el);
+				} else if (evt.deltaMode === 2) {
+					scale = getPageHeight(el);
+				}
+				
+				evt.dX = evt.deltaX * scale;
+				evt.dY = evt.deltaY * scale;
+			}
+		}
+		
+		function scroll(dX, dY) {
+			var s = this.scrollData;
+			s.offsetX || (s.offsetX = 0);
+			s.offsetX = s.offsetX + dX;
+			s.offsetY || (s.offsetY = 0);
+			s.offsetY = s.offsetY + dY;
+			
+			var maxOffsetY = s.contentHeight - s.bodyHeight; 
+			if (s.offsetY > maxOffsetY) {
+				s.offsetY = maxOffsetY;
+			}
+			if (s.offsetY < 0) {
+				s.offsetY = 0;
+			}
+			
+			var maxOffsetX = s.contentWidth - s.bodyWidth; 
+			if (s.offsetX > maxOffsetX) {
+				s.offsetX = maxOffsetX;
+			}
+			if (s.offsetX < 0) {
+				s.offsetX = 0;
+			}
+			
+			this._getStyleEl().style.top = -s.offsetY + 'px';
+			this._getStyleEl().style.left = -s.offsetX + 'px';
+			
+			var bothScrolls = this.cfg.scroll === constants.SCROLL_BOTH && (s.contentHeight > s.bodyHeight && s.contentWidth > s.bodyWidth);
+			var vScrollerOffset = (s.bodyHeight - s.vScrollerSize - (bothScrolls ? constants.SCROLLBAR_WIDTH : 0)) * s.offsetY / (s.contentHeight - s.bodyHeight);
+			this.vScroll.children[0].style.top = vScrollerOffset + 'px';
+			
+			var hScrollerOffset = (s.bodyWidth - s.hScrollerSize - (bothScrolls ? constants.SCROLLBAR_WIDTH : 0)) * s.offsetX / (s.contentWidth - s.bodyWidth);
+			this.hScroll.children[0].style.left = hScrollerOffset + 'px';
+		}
+		
+		function displayScroll() {
+			var bodyHeight = $(this.getEl()).height();
+			var contentHeight = $(this._getStyleEl()).height();
+			
+			var bodyWidth = $(this.getEl()).width();
+			var contentWidth = $(this._getStyleEl()).width();
+			
+			if (this.cfg.scroll === constants.SCROLL_BOTH && (contentHeight > bodyHeight || contentWidth > bodyWidth)) {
+				if (contentHeight + constants.SCROLLBAR_WIDTH > bodyHeight) {
+					contentWidth += constants.SCROLLBAR_WIDTH;
+				} 
+				if (contentWidth > bodyWidth) {
+					contentHeight += constants.SCROLLBAR_WIDTH;
+				}
+			}
+			var bothScrolls = this.cfg.scroll === constants.SCROLL_BOTH &&(contentHeight > bodyHeight && contentWidth > bodyWidth);
+			
+			if (bothScrolls) {
+				this.vScroll.style.bottom = '10px';
+				this.hScroll.style.right = '10px';
+			} else {
+				this.vScroll.style.bottom = '0px';
+				this.hScroll.style.right = '0px';
+			}
+			
+			if (contentHeight > bodyHeight && this.cfg.scroll !== constants.SCROLL_HORIZONTAL) {
+				this.vScroll.style.display = "block";
+				this.scrollData.vScrollVisible = true;
+				
+				if (this.cfg.scroll === constants.SCROLL_VERTICAL) {
+					this._getStyleEl().style.marginRight = '10px';
+					contentHeight = $(this._getStyleEl()).height();
+				}
+				
+				this.scrollData.vScrollerSize = Math.max(bodyHeight * bodyHeight / contentHeight - (bothScrolls ? constants.SCROLLBAR_WIDTH : 0), 8);
+				this.vScroll.children[0].style.height = this.scrollData.vScrollerSize + "px";
+			} else {
+				this.scrollData.vScrollVisible = false;
+				this.vScroll.style.display = "none";
+				this._getStyleEl().style.marginRight = '0px';
+			}
+			
+			if (contentWidth > bodyWidth && this.cfg.scroll !== constants.SCROLL_VERTICAL) {
+				this.hScroll.style.display = "block";
+				this.scrollData.hScrollVisible = true;
+				/*if (this.cfg.scroll === constants.SCROLL_HORIZONTAL) {
+					this._getStyleEl().style.marginBottom = '10px';
+					contentWidth = $(this._getStyleEl()).width();
+				}*/
+				
+				this.scrollData.hScrollerSize = Math.max(bodyWidth * bodyWidth / contentWidth - (bothScrolls ? constants.SCROLLBAR_WIDTH : 0), 8);
+				this.hScroll.children[0].style.width = this.scrollData.hScrollerSize + "px";
+			} else {
+				this.hScroll.style.display = "none";
+				this.scrollData.hScrollVisible = false;
+				//this._getStyleEl().style.marginBottom = '0px';
+			}
+			
+			this.scrollData.bodyHeight = bodyHeight;
+			this.scrollData.contentHeight = contentHeight;
+			this.scrollData.bodyWidth = bodyWidth;
+			this.scrollData.contentWidth = contentWidth;
+			
+			scroll.call(this, 0, 0);
+		}
+		
+		var constants = {
+			SCROLL_VERTICAL : 'vertical',
+			SCROLL_HORIZONTAL : 'horizontal',
+			SCROLL_BOTH : 'both',
+			SCROLLBAR_WIDTH : 10
+		}
+		
+		return {
+			constants : constants,
+			defaults : {
+				scroll  : constants.SCROLL_VERTICAL, // 'horizontal', 'both'
+				step : undefined
+			},
+			prototype : {
+				_buildEl : function(cfg) {
+					var self = this;
+					var wrapper = document.createElement('div');
+					wrapper.style.position = 'relative';
+					wrapper.style.overflow = "hidden";
+					
+					var el = document.createElement('div');
+					var s = el.style;
+					s.position = 'relative';
+					
+					for (var idx in cfg.items) {
+						var item = cfg.items[idx];
+						if (item instanceof iup.layout.Panel) {
+							this._items.push(item);
+							el.appendChild (item.getEl());
+						} else if (item instanceof iup.layout.Element) {
+							el.appendChild (item.getEl());
+						} else if (item instanceof HTMLElement) {
+							el.appendChild(item);
+						}
+					}
+					
+					wrapper.onwheel = function (evt) {
+						fixEvent.call(self, evt, wrapper);
+						scroll.call(self, evt.dX, evt.dY);
+					}
+					
+					var vScroller = document.createElement("div");
+					this.vScroll = iup.utils.createEl({tag:"div", className:"scrollbar v-scrollbar", style : {display:"none"}, content:vScroller});
+					var hScroller = document.createElement("div");
+					this.hScroll = iup.utils.createEl({tag:"div", className:"scrollbar h-scrollbar", style : {display:"none"}, content:hScroller});
+					this.scrollData = {};
+					
+					wrapper.appendChild(el);
+					wrapper.appendChild(this.vScroll);
+					wrapper.appendChild(this.hScroll);
+					
+					this._el = wrapper;
+					this._styleEl = el;
+				},
+				doLayout : function(width, height) {
+					iup.layout.ScrollPanel.superclass.doLayout.call(this, width, height);
+					
+					displayScroll.call(this);
+					
+					/*var styleEl = this._getStyleEl();
+					
+					if (this.cfg.content instanceof iup.layout.Panel) {
+						this.cfg.content.doLayout($(styleEl).width(), $(styleEl).height());
+					}*/
+					}
+				}
+			}
+		}()
+	);		
 
 iup.utils.createComponent('iup.layout.StretchPanel', iup.layout.Panel, 
 	{

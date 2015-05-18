@@ -150,7 +150,7 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 			emptyText				: undefined,					// text to display in case there's no data
 			selectionModel			: constants.SELECTION_NONE,		// "none", "single", "multi"
 			defaultColumnWidth		: 100,							// if you don't specify width for column -> it will be set to 100
-			scrollWidth				: 17,							// space left for scroll
+			scrollWidth				: 10,							// space left for scroll
 			resizeColumnAreaWidth	: 3,							// width of the area(that allows column resizing) on the left and right side of the column header 
 			filter					: function() {return true;},
 			style					: undefined,
@@ -178,13 +178,7 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 				var headerDiv = iup.utils.createEl({
 					tag:"div", 
 					className : 'grid-header-panel', 
-					content:headerTable,
-					style : {
-						position : "absolute",
-						top : "0px",
-						left : "0px",
-						right : "0px"
-					}
+					content:headerTable
 				});
 				
 				this._bodyColGroup = buildColGroup();
@@ -199,33 +193,14 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 					content : [this._bodyColGroup, this._body]
 				});
 				
-				var scroller = document.createElement("div");
-				this._scrollbar = iup.utils.createEl({tag:"div", className:"scrollbar", style : {display:"none"}, content:scroller});
-				
-				this._bodyWraper = iup.utils.createEl({
-					tag:"div",
-					style : {
-						overflow : "hidden", 
-						position : "absolute",
-						bottom : "0px",
-						left : "0px",
-						right : "0px"
-					},
-					content : [bodyTable, this._scrollbar]
-				}); 
+				this._bodyWraper = new iup.layout.ScrollPanel({
+					items : [bodyTable]
+				});
 				
 				var container = iup.utils.createEl({
 					tag : "div", 
-					style : {
-						position : "absolute", 
-						top : "0px", 
-						left:"0px", 
-						right:"0px", 
-						bottom : "0px",
-						overflow : "hidden"
-					},
 					className : "grid",
-					content : [headerDiv, this._bodyWraper]
+					content : [headerDiv, this._bodyWraper.getEl()]
 				});
 				
 				_buildHeader.apply(this);
@@ -260,18 +235,22 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 				iup.layout.Grid.superclass.doLayout.call(this, width, height);
 				
 				this.cfg.width = width;
-				_updateWidth.apply(this, [width]);
+				_updateWidth.call(this, width);
 				
 				var headerHeight = $(this._header).outerHeight();
-				this._bodyWraper.style.top = headerHeight + "px";
+				this._bodyWraper.getEl().style.top = headerHeight + "px";
 				
-				var bodyHeight = $(this._bodyWraper).height();
-				var tableHeight = $(this._bodyWraper.children[0]).height();
-				if (tableHeight > bodyHeight) {
-					this._scrollbar.style.display = "block";
-					this._scrollbar.children[0].style.height = bodyHeight / tableHeight * 100 + "%";
-				} else {
-					this._scrollbar.style.display = "none";
+				this._bodyWraper.doLayout(width , height - headerHeight);
+				
+				if(this._bodyWraper.scrollData.vScrollVisible) {
+					this.cfg.width = width - iup.layout.ScrollPanel.SCROLLBAR_WIDTH;
+					_updateWidth.call(this, width - iup.layout.ScrollPanel.SCROLLBAR_WIDTH);
+					
+					var updatedHeaderHeight = $(this._header).outerHeight();
+					if (updatedHeaderHeight !== headerHeight) {
+						this._bodyWraper.getEl().style.top = updatedHeaderHeight + "px";
+						this._bodyWraper.doLayout(width , height - updatedHeaderHeight);
+					}
 				}
 			}
 		};

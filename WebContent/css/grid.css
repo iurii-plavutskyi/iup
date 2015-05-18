@@ -16,8 +16,14 @@ td {
 
 .grid {
 	/*border:1px solid #CCCCCC;*/
-	border: 1px solid #5384A9;
-	color: #333333;
+	//border : 1px solid #5384A9;
+	color : #333333;
+	position : absolute; 
+	top : 0px; 
+	left : 0px; 
+	right : 0px;
+	bottom : 0px;
+	overflow : hidden;
 }
 
 .grid table{
@@ -55,14 +61,19 @@ td {
 .grid-td{
 	border-bottom : 1px solid #CCCCCC;
 	text-align : center;
-	background-image: url(../img/border_CCC.png);
+	//background-image: url(../img/border_CCC.png);
 	background-repeat: repeat-y;
 	background-position: right;
+	position:relative;
 }
 
 .grid-header-panel {
 	background-color: #dedede;
 	overflow : hidden;
+	position : absolute;
+	top : 0px;
+	left : 0px;
+	right : 0px;
 }
 
 .grid-th{
@@ -70,9 +81,30 @@ td {
 	font-weight: bold;
 	line-height: 1.2em;
 	text-align: center;
-	background-image: url(../img/border_CCC.png);
+	//background-image: url(../img/border_CCC.png);
 	background-repeat: repeat-y;
 	background-position: right;
+	position:relative;
+}
+
+.grid-th::after{
+	border-right: 1px solid #CCC;
+	content:"";
+	position:absolute;
+	top:0px;
+	right:0px;
+	bottom:0px;
+	width : 1px;
+}
+
+.grid-td::after{
+	border-right: 1px solid #CCC;
+	content:"";
+	position:absolute;
+	top:0px;
+	right:0px;
+	bottom:0px;
+	width : 1px;
 }
 
 .dragged-header{
@@ -551,27 +583,58 @@ border-bottom : 1px solid #579;*/
 
 .scrollbar {
 	position:absolute;
-	top:0px;
-	bottom:0px;
 	right:0px;
-	width:3px;
-	border:1px solid #999;
-	background-color:#ddd;
-}
-
-.scrollbar:hover{
-	width:10px;
-}
-
-.scrollbar:hover div{
-	border-radius:4px;
-	background-color:#999;
+	bottom:0px;
 }
 
 .scrollbar div{
+	border-radius:4px;
 	position:absolute;
+	background-color:#6055a0;
+	min-width:8px;	
+	min-height:8px;
+}
+
+.scrollbar::before {
+	content: "";
+	border : 0px dotted #000;
+    display: block;
+	opacity:0.3;
+    position: absolute;
+}
+
+.v-scrollbar {
+	top:0px;
+	width:10px;
+	background-color:inherit;
+}
+
+.v-scrollbar::before {
+    bottom: 0;
+    left: 3px;
+    top: 0;
+	border-left-width: 4px;
+}
+
+.v-scrollbar div{
 	left:1px;
 	right:1px;
-	min-height:8px;
-	background-color:#555;
+}
+
+.h-scrollbar {
+	left:0px;
+	height:10px;
+	background-color:inherit;
+}
+
+.h-scrollbar div{
+	top:1px;
+	bottom:1px;
+}
+
+.h-scrollbar::before {
+    left: 0;
+    bottom: 3px;
+    right: 0;
+	border-top-width: 4px;
 }
