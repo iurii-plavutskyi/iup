@@ -36,6 +36,7 @@ iup.utils.createComponent = function(name, parent, oCfg) {
 		defaults	: oCfg.defaults || {},
 		prototype 	: oCfg.prototype || {},
 		construct 	: oCfg.construct,
+		events 		: oCfg.events,
 		_init 		: oCfg._init
 	};
 	var path =  name.split(".");
@@ -55,6 +56,11 @@ iup.utils.createComponent = function(name, parent, oCfg) {
 				this.events = new iup.EventManager({
 					events : cfg.events
 				});
+				if (this.cfg.handlers) {
+					for (var idx in this.cfg.handlers){
+						this.events.on(idx, this.cfg.handlers[idx]);
+					}
+				}
 			}
 			
 			if (typeof cfg._init == 'function') {

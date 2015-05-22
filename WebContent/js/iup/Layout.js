@@ -4,17 +4,46 @@ iup.utils.createComponent('iup.layout.Element', undefined,
 			_buildEl : function(cfg) {
 				this._el = document.createElement("div");
 			},
-			hide : function(callback) {
+			hide : function(callback) { //@deprecated
 				this._el.style.display = "none";
 			},
-			show : function(callback) {
+			show : function(callback) { //@deprecated
 				this._el.style.display = "";
+			},
+			setVisible : function(visible) {
+				if (visible) {
+					this.show();
+				} else {
+					this.hide();
+				}
 			},
 			getEl : function() {
 				return this._el;
 			},
 			_getStyleEl : function() {
 				return this._styleEl || this._el;
+			},
+			mask : function(visible) {
+				if (visible) {
+					if (this._mask) {
+						this._mask.style.display = 'block';
+					} else {
+						var mask = document.createElement ('div');
+						mask.className = 'mask ' + this.cfg.maskClassName;
+						this.getEl().appendChild(mask);
+						this._mask = mask;
+						mask.onclick = function(event) {
+							event.cancelBubble = true;
+						}
+						/*if (this.cfg.maskClass) {
+							
+						}*/
+					}
+				} else {
+					if (this._mask) {
+						this._mask.style.display = 'none';
+					}
+				}
 			}
 		},
 		construct : function(oCfg) {
@@ -23,6 +52,8 @@ iup.utils.createComponent('iup.layout.Element', undefined,
 			if (this.cfg.style) {
 				iup.utils.appendStyle(this._getStyleEl(), this.cfg.style);
 			};
+				
+			$(this.getEl()).addClass('element');	
 				
 			if (this.cfg.className) {
 				$(this._getStyleEl()).addClass(this.cfg.className);
@@ -36,8 +67,6 @@ iup.utils.createComponent('iup.layout.Element', undefined,
 				items  :[]
 			},
 			prototype : {
-				_items : [],
-			
 				_buildEl : function(cfg) {
 					var el = document.createElement('div');
 					var s = el.style;
@@ -52,7 +81,7 @@ iup.utils.createComponent('iup.layout.Element', undefined,
 					for (var idx in cfg.items) {
 						var item = cfg.items[idx];
 						if (item instanceof iup.layout.Panel) {
-							this._items.push(item);
+							//this._items.push(item);
 							el.appendChild (item.getEl());
 						} else if (item instanceof iup.layout.Element) {
 							el.appendChild (item.getEl());
@@ -67,12 +96,12 @@ iup.utils.createComponent('iup.layout.Element', undefined,
 					el.style.width = width + 'px';
 					el.style.height = height + 'px';
 				},
-				getItems : function() {
+				/*getItems : function() {
 					return this._items;
-				},
+				},*/
 				addItem : function(item) {
 					if (item instanceof iup.layout.Panel) {
-						this._items.push(item);
+						//this._items.push(item);
 						this.getEl().appendChild (item.getEl());
 					} else if (item instanceof iup.layout.Element) {
 						this.getEl().appendChild (item.getEl());
@@ -82,7 +111,7 @@ iup.utils.createComponent('iup.layout.Element', undefined,
 				},
 				empty : function() {
 					$(this.getEl()).empty();
-					this._items.splice(0, this._items.length);
+					//this._items.splice(0, this._items.length);
 				}
 			}
 		});
@@ -104,27 +133,88 @@ iup.utils.createComponent('iup.layout.ScrollPanel', iup.layout.Panel,
         }
 		
 		function fixEvent(evt, el) {
-			if (this.cfg.step) {
-				evt.dX = evt.deltaX > 0 ? this.cfg.step : (evt.deltaX < 0 ? -this.cfg.step : 0);
-				evt.dY = evt.deltaY > 0 ? this.cfg.step : (evt.deltaY < 0 ? -this.cfg.step : 0);
+			if (evt.wheelDelta) {
+				evt.dX = 0;
+				evt.dY = this.cfg.step ? (evt.wheelDelta > 0 ? -this.cfg.step : this.cfg.step) : -evt.wheelDelta;
 			} else {
-				var scale = 1;
-				if (evt.deltaMode === 1) {
-					scale = getLineHeight(el);
-				} else if (evt.deltaMode === 2) {
-					scale = getPageHeight(el);
+				if (this.cfg.step) {
+					evt.dX = evt.deltaX > 0 ? this.cfg.step : (evt.deltaX < 0 ? -this.cfg.step : 0);
+					evt.dY = evt.deltaY > 0 ? this.cfg.step : (evt.deltaY < 0 ? -this.cfg.step : 0);
+				} else {
+					var scale = 1;
+					if (evt.deltaMode === 1) {
+						scale = getLineHeight(el);
+					} else if (evt.deltaMode === 2) {
+						scale = getPageHeight(el);
+					}
+					
+					evt.dX = evt.deltaX * scale;
+					evt.dY = evt.deltaY * scale;
+				}
+			}
+		}
+		
+		function makeScrollDraggable() {
+			new ScrollDragManager('X').makeDraggable(this.hScroll.children[0]);
+			new ScrollDragManager('Y').makeDraggable(this.vScroll.children[0]);
+			//windowDragManager.makeDraggable(header.getEl());
+			
+			var self = this;
+			
+			function ScrollDragManager(axis) {
+				var mouseOffset;
+				var prevDragPosition;
+				var axis = axis;
+				
+				var dragMaster = new iup.DragMaster({
+					mouseUp		: function() {
+					},
+					mouseMove	: function (e) {
+						if (axis === 'Y') {
+							var delta = prevDragPosition.y - e.pageY;
+							var total = self.scrollData.bodyHeight-self.scrollData.vScrollerSize;
+							var scale = (self.scrollData.contentHeight - self.scrollData.bodyHeight)/total;
+							var scrollAmount = - scale * delta;
+							var scrolled = scroll.call(self,0, scrollAmount).y / scale;
+
+							prevDragPosition.y += Math.round(scrolled);
+						}
+						
+						if (axis === 'X') {
+							var delta = prevDragPosition.x - e.pageX;
+							var total = self.scrollData.bodyWidth-self.scrollData.hScrollerSize;
+							var scale = (self.scrollData.contentWidth - self.scrollData.bodyWidth)/total;
+							var scrollAmount = - scale * delta;
+							var scrolled = scroll.call(self, - scale * delta, 0).x / scale;
+							prevDragPosition.x += Math.round(scrolled);
+						}
+					},
+					mouseDown	: function(e, element) {
+						mouseOffset = getMouseOffset(element, e);
+						prevDragPosition = {x : e.pageX, y : e.pageY}
+						return true;
+					}
+				});
+				
+				function getMouseOffset(target, e) {
+					var docPos  = iup.DragMaster.getPosition(target);
+					return {x:e.pageX - docPos.x , y:e.pageY - docPos.y};
 				}
 				
-				evt.dX = evt.deltaX * scale;
-				evt.dY = evt.deltaY * scale;
+				this.makeDraggable = function(element){
+					dragMaster.makeDraggable(element);
+
+				};
+				
 			}
 		}
 		
 		function scroll(dX, dY) {
 			var s = this.scrollData;
 			s.offsetX || (s.offsetX = 0);
-			s.offsetX = s.offsetX + dX;
 			s.offsetY || (s.offsetY = 0);
+			var prevOffset = {x : s.offsetX, y : s.offsetY};
+			s.offsetX = s.offsetX + dX;
 			s.offsetY = s.offsetY + dY;
 			
 			var maxOffsetY = s.contentHeight - s.bodyHeight; 
@@ -152,6 +242,8 @@ iup.utils.createComponent('iup.layout.ScrollPanel', iup.layout.Panel,
 			
 			var hScrollerOffset = (s.bodyWidth - s.hScrollerSize - (bothScrolls ? constants.SCROLLBAR_WIDTH : 0)) * s.offsetX / (s.contentWidth - s.bodyWidth);
 			this.hScroll.children[0].style.left = hScrollerOffset + 'px';
+			
+			return {x : s.offsetX - prevOffset.x, y : s.offsetY - prevOffset.y};
 		}
 		
 		function displayScroll() {
@@ -247,7 +339,7 @@ iup.utils.createComponent('iup.layout.ScrollPanel', iup.layout.Panel,
 					for (var idx in cfg.items) {
 						var item = cfg.items[idx];
 						if (item instanceof iup.layout.Panel) {
-							this._items.push(item);
+							//this._items.push(item);
 							el.appendChild (item.getEl());
 						} else if (item instanceof iup.layout.Element) {
 							el.appendChild (item.getEl());
@@ -261,6 +353,12 @@ iup.utils.createComponent('iup.layout.ScrollPanel', iup.layout.Panel,
 						scroll.call(self, evt.dX, evt.dY);
 					}
 					
+					wrapper.onmousewheel = function(evt) {
+						fixEvent.call(self, evt, wrapper);
+						scroll.call(self, evt.dX, evt.dY);
+						console.log(evt);
+					}
+					
 					var vScroller = document.createElement("div");
 					this.vScroll = iup.utils.createEl({tag:"div", className:"scrollbar v-scrollbar", style : {display:"none"}, content:vScroller});
 					var hScroller = document.createElement("div");
@@ -270,6 +368,8 @@ iup.utils.createComponent('iup.layout.ScrollPanel', iup.layout.Panel,
 					wrapper.appendChild(el);
 					wrapper.appendChild(this.vScroll);
 					wrapper.appendChild(this.hScroll);
+					
+					makeScrollDraggable.call(this);
 					
 					this._el = wrapper;
 					this._styleEl = el;
@@ -309,7 +409,7 @@ iup.utils.createComponent('iup.layout.StretchPanel', iup.layout.Panel,
 				}
 				
 				if (cfg.content instanceof iup.layout.Panel) {
-					this._items.push(cfg.content);
+					//this.cfg.items.push(cfg.content);
 					el.appendChild (cfg.content.getEl());
 				}
 				
@@ -362,7 +462,7 @@ iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel,
 						trTop.appendChild(top);
 						top.style.height = cfg.layoutConfig.top + 'px';
 					if (cfg.top instanceof iup.layout.Panel) {
-						this._items.push(cfg.top);
+						//this._items.push(cfg.top);
 						top.appendChild(cfg.top.getEl());
 					}
 				}
@@ -376,7 +476,7 @@ iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel,
 						trMid.appendChild(left);
 						left.style.width = cfg.layoutConfig.left + 'px';	
 					if (cfg.left instanceof iup.layout.Panel) {
-						this._items.push(cfg.left);
+						//this._items.push(cfg.left);
 						left.appendChild(cfg.left.getEl());
 					}
 				}
@@ -386,7 +486,7 @@ iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel,
 					trMid.appendChild(center);
 				
 				if (cfg.center instanceof iup.layout.Panel) {
-					this._items.push(cfg.center);
+					//this._items.push(cfg.center);
 					center.appendChild(cfg.center.getEl());
 				}
 				
@@ -396,7 +496,7 @@ iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel,
 						trMid.appendChild(right);
 						right.style.width = cfg.layoutConfig.right + 'px';
 					if (cfg.right instanceof iup.layout.Panel) {
-						this._items.push(cfg.right);
+						//this._items.push(cfg.right);
 						right.appendChild(cfg.right.getEl());
 					}	
 				}
@@ -410,7 +510,7 @@ iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel,
 						trBottom.appendChild(bottom);
 						bottom.style.height = cfg.layoutConfig.bottom + 'px';
 					if (cfg.bottom instanceof iup.layout.Panel) {
-						this._items.push(cfg.bottom);
+						//this._items.push(cfg.bottom);
 						bottom.appendChild(cfg.bottom.getEl());
 					}
 				}
@@ -448,91 +548,163 @@ iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel,
 	});
 	
 iup.utils.createComponent('iup.layout.TabPanel', iup.layout.Panel, 
-	{
-		defaults : {
-			buttonsPanelHeight : 20
-		},
-		prototype : {
-			_buildEl : function(cfg) {
-				var container = document.createElement("div");
+	function () {
+		function buildTab(item, idx) {
+			var tabContent = item.content.getEl();
 				
-				var tabButtonsPanel = document.createElement("div");
-				tabButtonsPanel.style.height = cfg.buttonsPanelHeight + 'px';
-				
-				var contentSizeWrapper = document.createElement("div");
-				contentSizeWrapper.style.position = 'relative';
-				var content = document.createElement("div");
-				
-				content.className = 'tab-panel-content-wrapper stretch';
-				
-				container.appendChild(tabButtonsPanel);
-				contentSizeWrapper.appendChild(content);
-				container.appendChild(contentSizeWrapper);
-				
-				var self = this;
-				for (var idx in cfg.items) {
-					var item = cfg.items[idx];
-					var tabContent = item.content.getEl();
-					
-					var button = new iup.Button({
-						text : item.title,
-						className : "tab-button",
-						style	: {
-							height 	: cfg.buttonsPanelHeight + 'px'
-						},
-						handler : function () {
-							self.discloseItem(this.itemIndex);
+			var cfg = this.cfg,
+				self = this;
+			
+			var style = cfg.buttonsPosition === 'top'
+						? {height : cfg.buttonsSize + 'px'}
+						: {width : cfg.buttonsSize + 'px'}
+			
+			var button = new iup.Button({
+				text : item.title,
+				className : "tab-button" + (cfg.buttonsPosition === 'top' ? " htab-button" : " vtab-button"),
+				style	: style,
+				handler : function () {
+					var buttons = self.tabButtonsPanel.children;
+					for (var i=0; i < buttons.length; i++) {
+						if (buttons[i] === this) {
+							self.discloseItem(i);
 						}
-					});
-					button.getEl().itemIndex = idx;
+					}
+				}
+			});
+			
+			if (item.closable) {
+				var closeButton = document.createElement('div');
+				button._getStyleEl().appendChild(closeButton);
+				closeButton.className = 'close-tab-button'
+				closeButton.onclick = function(event) {
 					
-					tabButtonsPanel.appendChild(button.getEl());
-					content.appendChild(tabContent);
-					tabContent.style.display = "none";
+					var buttons = self.tabButtonsPanel.children;
+					for (var i=0; i < buttons.length; i++) {
+						if (buttons[i] === button.getEl()) {
+							self.removeItem(i);
+						}
+					}
+					event.cancelBubble = true;
 				}
-				
-				this._el = container;
-				this.tabButtonsPanel = tabButtonsPanel;
-				this.contentSizeWrapper = contentSizeWrapper;
-				this.content = content;
-			},
-			doLayout : function(width, height) {
-				iup.layout.TabPanel.superclass.doLayout.call(this, width, height);
-				
-				var contentHeight = height - this.cfg.buttonsPanelHeight;
-				this.contentSizeWrapper.style.height = contentHeight + "px";
-				this.contentSizeWrapper.style.width = width + "px";
-				
-				if (this.disclosedItem) {
-					this.disclosedItem.content.doLayout($(this.content).width(), $(this.content).height());
-				} else {
-					this.discloseItem(0);
-				}
-			},
-			discloseItem : function(idx) {
-				var contents = this.content.children;
-				for (var i = 0; i < contents.length; i++) {
-					contents[i].style.display = "none";
-				};
-				contents[idx].style.display = "block";
-				
-				var buttons = this.tabButtonsPanel.children;
-				for (var i = 0; i < buttons.length; i++) {
-					$(buttons[i]).removeClass("tab-button-selected");
-				};
-				$(buttons[idx]).addClass("tab-button-selected");
-				
-				var item = this.cfg.items[idx];
-				if (typeof item.onDisclose === "function") {
-					item.onDisclose(true);
-				}
-				
-				this.disclosedItem = item;
-				item.content.doLayout($(this.content).width(), $(this.content).height());
+				closeButton.innerHTML = '<img height="10" width="10" style="fill:#f00" src="svg/close.svg" />';
+				//closeButton.innerHTML = '<svg role="img" style="fill:#00f;" height="10" width="10"><use xlink:href="svg/close-icon.svg"></use></svg>';
 			}
 			
+			this.tabButtonsPanel.appendChild(button.getEl());
+			this.content.appendChild(tabContent);
+			tabContent.style.display = "none";
 		}
-	});
+	
+		return {
+			defaults : {
+				buttonsPosition : 'top',
+				buttonsSize : 20
+			},
+			prototype : {
+				_buildEl : function(cfg) {
+					var container = document.createElement("div");
+					
+					var tabButtonsPanel = document.createElement("div");
+					tabButtonsPanel.style.position = 'absolute';
+					tabButtonsPanel.style.top = '0px';
+					tabButtonsPanel.style.left = '0px';
+					if (cfg.buttonsPosition === 'top') {
+						tabButtonsPanel.style.height = cfg.buttonsSize + 'px';
+						tabButtonsPanel.style.right = '0px';
+					} else {
+						tabButtonsPanel.style.bottom = '0px';
+						tabButtonsPanel.style.width = cfg.buttonsSize + 'px';
+					}
+					
+					var content = document.createElement("div");
+					content.style.position = 'absolute';
+					content.style.bottom = '0px';
+					content.style.right = '0px';
+					
+					if (cfg.buttonsPosition === 'top') {
+						content.style.left = '0px';
+						content.style.top = cfg.buttonsSize + 'px';
+					} else {
+						content.style.left = cfg.buttonsSize + 'px';
+						content.style.top = '0px';
+					}
+					
+					content.className = 'tab-panel-content-wrapper';
+					
+					container.appendChild(tabButtonsPanel);
+					container.appendChild(content);
+					
+					this._el = container;
+					this.tabButtonsPanel = tabButtonsPanel;
+					this.content = content;
+					
+					var self = this;
+					for (var idx in cfg.items) {
+						var item = cfg.items[idx];
+						buildTab.call(this, item);
+					}
+				},
+				addItem : function(item, idx) {
+					this.cfg.items.push(item);
+					
+					buildTab.call(this, item, idx);
+					
+					if (this.cfg.items.length === 1) {
+						this.discloseItem(0);
+					}
+				},
+				removeItem : function(idx) {
+					var cfg = this.cfg;
+					var contents = this.content.children;
+					this.content.removeChild(contents[idx]);
+				
+					var buttons = this.tabButtonsPanel.children;
+					this.tabButtonsPanel.removeChild(buttons[idx]);
+					
+					var item = this.cfg.items[idx];
+					this.cfg.items.splice(idx, 1);
+					if (this.disclosedItem === item) {
+						if (buttons.length > idx) {
+							this.discloseItem(idx);
+						} else if (idx > 0){
+							this.discloseItem(idx-1);
+						}
+					}
+				},
+				doLayout : function(width, height) {
+					iup.layout.TabPanel.superclass.doLayout.call(this, width, height);
+
+					if (this.disclosedItem) {
+						this.disclosedItem.content.doLayout($(this.content).width(), $(this.content).height());
+					} else {
+						this.discloseItem(0);
+					}
+				},
+				discloseItem : function(idx) {
+					var contents = this.content.children;
+					for (var i = 0; i < contents.length; i++) {
+						contents[i].style.display = "none";
+					};
+					contents[idx].style.display = "block";
+					
+					var buttons = this.tabButtonsPanel.children;
+					for (var i = 0; i < buttons.length; i++) {
+						$(buttons[i]).removeClass("selected");
+					};
+					$(buttons[idx]).addClass("selected");
+					console.log(this.cfg.items);
+					var item = this.cfg.items[idx];
+					if (typeof item.onDisclose === "function") {
+						item.onDisclose(true);
+					}
+					
+					this.disclosedItem = item;
+					item.content.doLayout($(this.content).width(), $(this.content).height());
+				}
+			}
+		}
+	}());
 
 iup.utils.createComponent('iup.layout.Toolbar', iup.layout.Panel, 
 	{

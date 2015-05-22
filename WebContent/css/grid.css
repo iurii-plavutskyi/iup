@@ -281,6 +281,11 @@ border-bottom : 1px solid #579;*/
 	font-size : 14px;
 	font-weight : bold;
 }
+
+.element {
+	position : relative;
+}
+
 .mask {
 	background-color : #333;
 	opacity : 0.5;
@@ -288,7 +293,8 @@ border-bottom : 1px solid #579;*/
 	left : 0px;
 	right : 0px;
 	top : 0px;
-	botton : 0px;
+	bottom : 0px;
+	z-index : 1;
 }
 
 .grid-mask {
@@ -342,6 +348,7 @@ border-bottom : 1px solid #579;*/
     background-color: #92A6B8;
     border-color: #D9DFE7 #253A4B #253A4B #D9DFE7;
     color: #FFFFFF;
+	
 }
 
 .pag-button-active {
@@ -359,6 +366,14 @@ border-bottom : 1px solid #579;*/
 	background-repeat: no-repeat;
 }
 
+.button-div {
+	display: inline-block;
+	text-align: center;
+	cursor: default;
+
+	overflow:hidden;
+}
+
 .button {
 	width: 80px;
 	height: 22px;
@@ -369,6 +384,14 @@ border-bottom : 1px solid #579;*/
 	border-bottom-color: #253A4B;
 	white-space: nowrap;
 }
+.button-icon {
+	float:left; 
+	width : 16px; 
+	height : 16px;
+	margin-top:3px;
+	margin-left:3px;
+}
+
 .search {
 	background: #5384A9;
 }
@@ -418,18 +441,50 @@ border-bottom : 1px solid #579;*/
 }
 
 .tab-button {
-	border: 1px solid #E5E5E5;
+	//min-width:30px;
+	//border: 1px solid #E5E5E5;
 	border-bottom : 0px;
 	background-color : #ccc;
-	border-radius:5px 5px 0px 0px;
 	position: relative; 
-	bottom: -1px;
 	z-index:1;
 }
 
-.tab-button-selected {
-	border-bottom : 0px;
+.close-tab-button{
+	//border: 1px solid #E5E5E5;
+	width : 12px;
+	height : 12px;
+	position : absolute;
+	top : 4px;
+	right : 9px;
+}
+.close-tab-button img{
+	margin:1px;
+}
+.close-tab-button:hover{
+	background-color : #f55;
+}
+
+.tab-button.selected {
 	background-color : #fff;
+}
+
+.htab-button {
+	border-left: 1px solid #E5E5E5;
+	border-radius:5px 5px 0px 0px;
+	bottom: -1px;
+	padding : 0px 25px 0px 10px;
+}
+.htab-button.selected {
+	border-bottom : 0px;
+}
+
+.vtab-button {
+	border-top: 1px solid #E5E5E5;
+	border-radius:5px 0px 0px 5px;
+	right: -1px;
+}
+.vtab-button.selected {
+	border-right : 0px;
 }
 
 .tab-panel-content-wrapper {
@@ -458,21 +513,21 @@ border-bottom : 1px solid #579;*/
 }
 
 .lbl-action {
-	fon-weight : bold;
-	padding-left : 10px;
+	font-weight : bold;
+	padding-left: 10px;
 	padding-top : 10px;
 	display		: block;
 }
 	
 .lbl-error {
 	color		: #800;
-	paddingLeft	: 40px;
+	padding-left: 40px;
 	display		: block;
 }
 	
 .lbl-success {
 	color		: #080;
-	paddingLeft	: 40px;
+	padding-left: 40px;
 	display		: block;
 }
 

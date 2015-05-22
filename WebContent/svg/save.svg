@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" style="fill:#33a;">
+	<title>SAVE</title>
+	  <path  d="M0,0L100,0L100,100L20,100L0,80z"/>
+	  <path fill="#eee" d="M10,5L90,5L90,60L10,60z"/>
+	  <path transform="translate(5,0)" fill="#aaa" d="M20,70L70,70L70,100L45,100L45,73L30,73L30,100L20,100z"/>
+	  
+	  <line id="save-btn-line" stroke="#a55" y2="15" y1="15" x2="85" x1="15"/>
+	  <line id="save-btn-line" stroke="#a55" y2="25" y1="25" x2="85" x1="15"/>
+	  <line id="save-btn-line" stroke="#a55" y2="35" y1="35" x2="85" x1="15"/>
+	  <line id="save-btn-line" stroke="#a55" y2="45" y1="45" x2="85" x1="15"/>
+</svg>
+

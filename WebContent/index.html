@@ -1,6 +1,7 @@
 <html>
 
 <head>
+<link rel="import" href="svg/save.svg" />
 <link rel="stylesheet" href="css/grid.css" />
 <script type="text/javascript" src="js/adds/jquery-1.11.0.min.js"></script>
 <script type="text/javascript" src="js/iup/Utils.js"></script>
@@ -9,11 +10,12 @@
 <script type="text/javascript" src="js/iup/Grid.js"></script>
 <script type="text/javascript" src="js/iup/EventManager.js"></script>
 <script type="text/javascript" src="js/iup/Store.js"></script>
+<script type="text/javascript" src="js/iup/DnD.js"></script>
 
 <script type="text/javascript">
 	$(document).ready( function() {
 		var el = new iup.layout.Element({style: {border : '1px solid', backgroundColor:'#999', width : '100px', height : '100px'}});
-		var panel = new iup.layout.Panel({style: {backgroundColor:'#aff'}, items : [el]});
+		var panel = new iup.layout.Panel({style: {backgroundColor:'#aff'}});
 	
 		
 		var stretchPanel = new iup.layout.StretchPanel({
@@ -56,9 +58,17 @@
 			]
 		});
 		
+		var store = new iup.data.Store({
+			data : [{name:"Name1", lastName:"LastName1", age : 38},
+					{name:"Name2", lastName:"LastName2", age : 31},
+				   // {name:"Name3", lastName:"LastName3", age : 32},
+					{name:"Name4", lastName:"LastName4", age : 33}],
+			autoLoad : false
+			
+		});
 		var grid = new iup.layout.Grid({
 			columns : [
-			   /* {header : "Info", key : "name", 
+			    {header : "Info", key : "name", 
 			    	renderer : function(value, record) {   
 			    		var ret = [];
 			    		ret.push('First Name : ' + record.get('name'));
@@ -66,41 +76,85 @@
 			    		ret.push('Age : ' + record.get('age'));
 			    		return ret.join('<br/>');
 			    	}
-			    },*/
-				{header : "Name", key : "name"},
+			    },
+				{header : "Name", key : "name", sortable : true},
 				{header : "Last Name adsasfda asdasda asd adsa adsasfda asdasda asd adsa adsasfda asdasda asd adsa", key : "lastName", width : 150},
-				{header : "Age", key : "age", width : 50, fixed : true}       
+				{header : "Age", key : "age", width : 50, fixed : true, sortable : true}       
 			],
 			emptyText : "no data",
-			store : new iup.data.Store({
-				data : [{name:"Name1", lastName:"LastName1", age : 30},
-				        {name:"Name2", lastName:"LastName2", age : 31},
-				     //   {name:"Name3", lastName:"LastName3", age : 32},
-				        {name:"Name4", lastName:"LastName4", age : 33}],
-				autoLoad : false
-				
-			})
+			store : store,
+			selectionModel : iup.layout.Grid.SELECTION_MULTI,
+			handlers : { 
+				cellClick : function(e,c,r) {console.log(e,c,r);}
+			}
 			
+		});
+
+		var updateData = new iup.Button({
+			text:"Load Data", 
+			className : 'button delete',
+			handler : function() {
+				store.loadData([
+					{name:"Name5", lastName:"LastName5", age : 43},
+					{name:"Name6", lastName:"LastName6", age : 44},
+					{name:"Name7", lastName:"LastName7", age : 45},
+					{name:"Name8", lastName:"LastName8", age : 46},
+					{name:"Name9", lastName:"LastName9", age : 47}
+				]);
+			}
 		})
+		
+		var masked = false;
+		var maskButton = new iup.Button({
+			text:"C", 
+			icon : 'svg/save.svg',
+			className : 'button add', 
+			handler : function() {
+				masked = !masked;
+				updateData.mask(masked);
+			}
+		});
+		
+		var tabPanel = new iup.layout.TabPanel({
+			style	: {backgroundColor:'#aff'},
+			buttonsPosition : 'top',
+			//buttonsSize : 150,
+			items	: [
+				{title : "A", content : new iup.layout.Panel({style: {backgroundColor:'#aaf'}})},     	   
+				{title : "B", content : grid}, 
+				{title : "C", closable : true, content : new iup.layout.Panel({style: {backgroundColor:'#faa'}})},     	 
+			]
+		});
 		
 		var borderPanel = new iup.layout.BorderPanel({
 			layoutConfig : {top : 150, bottom : 30, left : 100, right : 50},
-			top 	: new iup.layout.TabPanel({
-				style	: {backgroundColor:'#aff'},
-				items	: [
-					{title : "A", content : new iup.layout.Panel({style: {backgroundColor:'#aaf'}})},     	   
-					{title : "B", content : grid/*new util.layout.Panel({style: {backgroundColor:'#afa'}})*/}, 
-					{title : "C", content : new iup.layout.Panel({style: {backgroundColor:'#faa'}})},     	 
-				]
-			}),
+			top 	: tabPanel,
 			bottom 	: new iup.layout.Toolbar({
 				style	: {backgroundColor:'#aaf', padding : '5px'},
 				marginBetweenItems : 5,
 				items	: [
 		     		new iup.Button({text:"A", className : 'button edit'}), 
+					new iup.Button({
+						text : "Add", 
+						className : 'button edit',
+						handler : function() {
+							tabPanel.addItem({
+								title : 'T' + new Date().getTime(),
+								closable : true,
+								content : new iup.layout.Panel({style: {backgroundColor:'#aaa'}}) 
+							})
+						}
+					}),
+					new iup.Button({
+						text:"Remove", 
+						className : 'button edit',
+						handler : function() {
+							tabPanel.removeItem(4);
+						}
+					}),
 					'->', 
-					new iup.Button({text:"B", className : 'button delete'}),
-					new iup.Button({text:"C", className : 'button add'}) 
+					updateData,
+					maskButton
 		     	]
 			}),
 			left 	: scrollPanel,//new iup.layout.Panel({style: {backgroundColor:'#aaa'}}),
@@ -145,5 +199,7 @@
 </script>
 
 </head>
-<body style="margin:0px;"></body>
+<body style="margin:0px;">
+
+</body>
 </html>

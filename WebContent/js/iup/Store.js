@@ -110,11 +110,17 @@ iup.data.Store = function(oCfg){
 	}
 	
 	this.loadData = function(aData) {
+		//eventManager.fireEvent("loadStarted", data, store);
+	
 		data = buildData( aData);
 		if (sortOrder) {
 			sortLocally();
 		}
-		eventManager.fireEvent("load", data, store);
+		
+		//setTimeout(function() {
+			eventManager.fireEvent("load", data, store);
+		//},2000);
+		
 		eventManager.fireEvent("dataChanged", data, store);
 	};
 	

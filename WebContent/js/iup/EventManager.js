@@ -26,4 +26,5 @@ iup.EventManager = function(oCfg){
 			this.addHandler(idx, oHandlers[idx]);
 		}
 	};
+	this.on = this.addHandler;
 };

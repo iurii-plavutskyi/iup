@@ -1,6 +1,159 @@
 
 iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel, 
 	function () {
+		function registerEvents(){
+			var self = this,
+				cfg = self.cfg;
+			self._body.onclick = function(event){
+
+				if (window.getSelection) { 
+					window.getSelection().removeAllRanges();
+				} else if (document.selection) {
+					document.selection.empty();
+				}
+				
+				var target = event.target || event.srcElement;
+				if (! $(target).hasClass('grid-expander')){
+					var cell = iup.utils.getParentCell(target);
+					self.events.fireEvent('cellClick', cell, cell.column, cell.record);
+											
+					var row = iup.utils.getParentRow(cell);
+					self.events.fireEvent('rowClick', row, row.record);
+					
+					var selectedRows = self._selectedRows;
+					if (cfg.selectionModel != constants.SELECTION_NONE && row.record) {
+						if (cfg.selectionModel == constants.SELECTION_SINGLE) {
+							$.each(selectedRows, function(idx, selection){
+								$(selection).removeClass("grid-selected-row");
+							});
+							selectedRows.splice(0, selectedRows.length);
+							$(row).addClass("grid-selected-row");
+							selectedRows.push(row);
+						}
+						
+						if (cfg.selectionModel == constants.SELECTION_MULTI) {
+							if (event.ctrlKey) {
+								if($(row).hasClass("grid-selected-row")) {
+									selectedRows.splice(selectedRows.indexOf(row), 1);
+									$(row).removeClass("grid-selected-row");
+								} else {
+									$(row).addClass("grid-selected-row");
+									selectedRows.push(row);
+								}
+							} else if (event.shiftKey) {
+								
+								if (selectedRows.length == 0) {
+									$(row).addClass("grid-selected-row");
+									selectedRows.push(row);
+								} else {
+									if (selectedRows.length > 1) {
+										for (var i = 1; i < selectedRows.length; i++) {
+											$(selectedRows[i]).removeClass("grid-selected-row");
+										}
+										selectedRows.splice(1, selectedRows.length - 1);
+									}
+									var nextRow = selectedRows[0];
+									if (nextRow != row) {
+										var data = cfg.store.getData();
+										var moveDown = data.indexOf(selectedRows[0].record) < data.indexOf(row.record);
+										do {
+											nextRow = moveDown ? nextRow.nextSibling : nextRow.previousSibling;
+										
+											$(nextRow).addClass("grid-selected-row");
+											selectedRows.push(nextRow);
+										} while (nextRow != row);
+									}
+								}
+							} else {
+								$.each(selectedRows, function(idx, selection){
+									$(selection).removeClass("grid-selected-row");
+								});
+								selectedRows.splice(0, selectedRows.length);
+								
+								$(row).addClass("grid-selected-row");
+								selectedRows.push(row);
+							}
+							
+								
+						}
+					
+						self.events.fireEvent("select", selectedRows);
+					}
+				}
+				
+				
+			}
+
+			self._body.ondblclick = function(event){
+				var target = event.target != null ? event.target : event.srcElement;
+				if (!$(target).hasClass('grid-expander')){
+					var cell = iup.utils.getParentCell(target);
+					eventManager.fireEvent('cellDblClick', cell, cell.column, cell.record);
+											
+					var row = iup.utils.getParentRow(cell);
+					eventManager.fireEvent('rowDblClick', row, row.record);
+				}
+			}
+
+			self._header.onclick = function(event){
+				var target = event.target != null ? event.target : event.srcElement;
+				var cell = iup.utils.getParentCell(target);
+				if (!$(cell.parentNode).hasClass("scroll-header")){
+					self.events.fireEvent('headerClick', 
+											cell, 
+											cell.column);
+				}
+			}
+		}
+		
+		function buildSort(head) { 
+			var sortContainer = document.createElement("div");
+			sortContainer.style.float = "right";
+			sortContainer.style.position = "relative";
+			var sortDiv = document.createElement("div");
+			$(sortDiv).addClass("sort");
+			
+			var sort = document.createElement("table");
+			
+			var tBody = document.createElement("thead");
+			sort.appendChild(tBody);
+			
+			var tr = document.createElement("tr");
+			tBody.appendChild(tr);
+			
+			var asc = document.createElement("th");
+			tr.appendChild(asc);
+			
+			var desc = document.createElement("th");
+			tr.appendChild(desc);
+			
+			$(asc).addClass("sort_asc_ena");
+			$(desc).addClass("sort_desc_ena");
+			
+			
+			sortDiv.appendChild(sort);
+			sortContainer.appendChild(sortDiv);
+			head.appendChild(sortContainer);
+			
+			head.sort = sortDiv;
+			sortDiv.asc = asc;
+			sortDiv.desc = desc;
+			
+			var self = this;
+			asc.onclick = function(evt) {
+				var sortName = head.column.sortName || head.column.key; 
+				self.cfg.store.sort({name : sortName, direction : "asc"});
+				self.events.fireEvent("sort", sortName, "asc");
+			}
+			
+			desc.onclick = function(evt) {
+				var sortName = head.column.sortName || head.column.key; 
+				self.cfg.store.sort({name : sortName, direction : "desc"});
+				self.events.fireEvent("sort", sortName, "desc");
+			}
+			
+		}
+	
 		function _buildBody() {
 			var cfg = this.cfg;
 			$(this._body).empty();
@@ -86,6 +239,10 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 				
 				var className = "grid-header";
 				
+				if (column.sortable) {
+					buildSort.call(this, th);
+				}
+				
 				var cell = _buildCell.apply(this, [column.header, className]);
 
 				th.appendChild(cell);
@@ -93,7 +250,30 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 			};
 		}
 		
-		function _updateWidth(width) {
+		function updateSortInfo() {
+			var sortOrder = this.cfg.store.getSortOrder();
+			if (sortOrder) {
+				if (typeof sortOrder != "undefined") {
+					$.each(this._header.children[0].children, function(index, th) {
+						if (th.column && th.column.sortable) {
+							$(th.sort.asc).removeClass("sort_asc_selected");
+							$(th.sort.desc).removeClass("sort_desc_selected");
+							th.sort.style.display = "";
+							if (sortOrder.name == th.column.key) {
+								th.sort.style.display = "block";
+								if (sortOrder.direction == "desc") {
+									$(th.sort.desc).addClass("sort_desc_selected");
+								} else {
+									$(th.sort.asc).addClass("sort_asc_selected");
+								}
+							}
+						}
+					});
+				}
+			}
+		}
+		
+		function _updateWidth() {
 			var cfg = this.cfg;
 			_calcWidth.apply(this);
 			var headCols = this._headerColGroup.children;
@@ -111,7 +291,7 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 				column.calculatedWidth = column.width;
 			});
 			
-			var width = cfg.width;			 	// available space 
+			var width = cfg.width - (this._bodyWraper.scrollData.vScrollVisible ? iup.layout.ScrollPanel.SCROLLBAR_WIDTH : 0);			 	// available space 
 			var resizableColumnsWidth = 0;		// summary width of not fixed columns 
 			var fixedWidth = 0;					// summary width of fixed columns to calculate what space can be separated between resizable columns
 			var allocatedWidth = 0;				// summary recalculated width of not fixed column (is used to set last column's width to ensure that summary width of all columns will be equall to all available space)
@@ -194,6 +374,7 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 				});
 				
 				this._bodyWraper = new iup.layout.ScrollPanel({
+					maskClassName : 'busy-mask',
 					items : [bodyTable]
 				});
 				
@@ -232,19 +413,23 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 				this._styleEl = container;
 			},
 			doLayout : function(width, height) {
-				iup.layout.Grid.superclass.doLayout.call(this, width, height);
+				this.cfg.height = height || this.cfg.height;
+				this.cfg.width = width || this.cfg.width;
 				
-				this.cfg.width = width;
-				_updateWidth.call(this, width);
+				iup.layout.Grid.superclass.doLayout.call(this, this.cfg.width, this.cfg.height);
+				
+				var scrolled = this._bodyWraper.scrollData.vScrollVisible || false;
+				
+				_updateWidth.call(this);
 				
 				var headerHeight = $(this._header).outerHeight();
 				this._bodyWraper.getEl().style.top = headerHeight + "px";
 				
 				this._bodyWraper.doLayout(width , height - headerHeight);
 				
-				if(this._bodyWraper.scrollData.vScrollVisible) {
-					this.cfg.width = width - iup.layout.ScrollPanel.SCROLLBAR_WIDTH;
-					_updateWidth.call(this, width - iup.layout.ScrollPanel.SCROLLBAR_WIDTH);
+				var scrollStateChanged = scrolled !== this._bodyWraper.scrollData.vScrollVisible
+				if(scrollStateChanged) {
+					_updateWidth.call(this);
 					
 					var updatedHeaderHeight = $(this._header).outerHeight();
 					if (updatedHeaderHeight !== headerHeight) {
@@ -253,13 +438,38 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 					}
 				}
 			}
+			
 		};
 		
 		return {
 			constants : constants, 
 			defaults : defaults,
 			prototype : prototype,
-			events : events
+			events : events,
+			_init : function() {
+			var self = this;
+				this._selectedRows = [];
+				registerEvents.call(this);
+				
+				this.cfg.store.on('loadStarted', function() {
+					self._bodyWraper.mask(true);
+				});
+				
+				this.cfg.store.on('load', function() {
+					self._bodyWraper.mask(false);
+					_buildBody.apply(self);
+					updateSortInfo.call(self);
+					self.doLayout();
+				});
+				
+				/*cfg.store.on("recordChange", function(record){
+					updateRow(record);
+				});*/
+				
+				/*if (!cfg.fixedColumns) {
+					addColumnResizability();
+				}*/
+			}
 		};
 		
 	}()
