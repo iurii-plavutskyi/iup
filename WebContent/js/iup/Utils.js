@@ -14,22 +14,23 @@ function extend(Child, Parent) {
 	Child.superclass = Parent.prototype;
 }
 
-iup.utils.createComponent = function(name, parent, oCfg) {
-	function merge (defaults, config) {
-		var ret = {};
-		for (var key in defaults) {
-			ret[key] = defaults[key];
-		}
-		for (var key in config) {
-			var val = config[key];
-			if (typeof val === 'object' && typeof ret[key] === 'object' && !Array.isArray(val)) {
-				ret[key] = merge(ret[key], val);
-			} else {
-				ret[key] = config[key];
-			}
-		}
-		return ret;
+iup.utils.merge = function (defaults, config) {
+	var ret = {};
+	for (var key in defaults) {
+		ret[key] = defaults[key];
 	}
+	for (var key in config) {
+		var val = config[key];
+		if (typeof val === 'object' && typeof ret[key] === 'object' && !Array.isArray(val)) {
+			ret[key] = iup.utils.merge(ret[key], val);
+		} else {
+			ret[key] = config[key];
+		}
+	}
+	return ret;
+}
+
+iup.utils.createComponent = function(name, parent, oCfg) {
 	
 	var cfg = {
 		constants 	: oCfg.constants || {},
@@ -47,7 +48,7 @@ iup.utils.createComponent = function(name, parent, oCfg) {
 		type = cfg.construct;
 	} else {
 		type = function (oCfg) {
-			this.cfg = merge(cfg.defaults, oCfg);
+			this.cfg = iup.utils.merge(cfg.defaults, oCfg);
 			if (pack[className].superclass) {
 				pack[className].superclass.constructor.call(this, this.cfg);
 			}

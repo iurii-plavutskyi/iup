@@ -282,6 +282,16 @@ border-bottom : 1px solid #579;*/
 	font-weight : bold;
 }
 
+.window-minimized{
+	height : 20px;
+	float : left;
+	border : 1px solid #65a;
+	border-radius : 3px;
+	padding : 3px 7px;
+	background-color : #99A;
+	cursor : default;
+}
+
 .element {
 	position : relative;
 }
@@ -383,13 +393,14 @@ border-bottom : 1px solid #579;*/
 	border-right-color: #253A4B;
 	border-bottom-color: #253A4B;
 	white-space: nowrap;
+	padding: 0px;
 }
 .button-icon {
 	float:left; 
 	width : 16px; 
 	height : 16px;
-	margin-top:3px;
-	margin-left:3px;
+	//margin-top:3px;
+	//margin-right:5px;
 }
 
 .search {
@@ -442,11 +453,15 @@ border-bottom : 1px solid #579;*/
 
 .tab-button {
 	//min-width:30px;
-	//border: 1px solid #E5E5E5;
-	border-bottom : 0px;
+	border: 1px solid #E5E5E5;
+	//border-bottom : 0px;
 	background-color : #ccc;
 	position: relative; 
 	z-index:1;
+}
+
+.window-close{
+	padding:0px;
 }
 
 .close-tab-button{
@@ -456,6 +471,7 @@ border-bottom : 1px solid #579;*/
 	position : absolute;
 	top : 4px;
 	right : 9px;
+	z-index:1;
 }
 .close-tab-button img{
 	margin:1px;
@@ -469,9 +485,9 @@ border-bottom : 1px solid #579;*/
 }
 
 .htab-button {
-	border-left: 1px solid #E5E5E5;
+	border-bottom:  0px;//1px solid #E5E5E5;
 	border-radius:5px 5px 0px 0px;
-	bottom: -1px;
+	//bottom: -1px;
 	padding : 0px 25px 0px 10px;
 }
 .htab-button.selected {
@@ -479,9 +495,9 @@ border-bottom : 1px solid #579;*/
 }
 
 .vtab-button {
-	border-top: 1px solid #E5E5E5;
+	border-right: 0px;//1px solid #E5E5E5;
 	border-radius:5px 0px 0px 5px;
-	right: -1px;
+	//right: -1px;
 }
 .vtab-button.selected {
 	border-right : 0px;

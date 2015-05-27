@@ -1,8 +1,16 @@
 iup.utils.createComponent('iup.layout.Element', undefined, 
 	{
+		defaults : {
+			style : undefined,
+			className : undefined,
+			html : undefined
+		},
 		prototype : {
 			_buildEl : function(cfg) {
 				this._el = document.createElement("div");
+				if (cfg.html) {
+					this._el.innerHTML = cfg.html;
+				}
 			},
 			hide : function(callback) { //@deprecated
 				this._el.style.display = "none";
@@ -356,7 +364,6 @@ iup.utils.createComponent('iup.layout.ScrollPanel', iup.layout.Panel,
 					wrapper.onmousewheel = function(evt) {
 						fixEvent.call(self, evt, wrapper);
 						scroll.call(self, evt.dX, evt.dY);
-						console.log(evt);
 					}
 					
 					var vScroller = document.createElement("div");
@@ -378,17 +385,10 @@ iup.utils.createComponent('iup.layout.ScrollPanel', iup.layout.Panel,
 					iup.layout.ScrollPanel.superclass.doLayout.call(this, width, height);
 					
 					displayScroll.call(this);
-					
-					/*var styleEl = this._getStyleEl();
-					
-					if (this.cfg.content instanceof iup.layout.Panel) {
-						this.cfg.content.doLayout($(styleEl).width(), $(styleEl).height());
-					}*/
-					}
 				}
 			}
-		}()
-	);		
+		}
+	}());		
 
 iup.utils.createComponent('iup.layout.StretchPanel', iup.layout.Panel, 
 	{
@@ -420,6 +420,17 @@ iup.utils.createComponent('iup.layout.StretchPanel', iup.layout.Panel,
 			},
 			doLayout : function(width, height) {
 				iup.layout.StretchPanel.superclass.doLayout.call(this, width, height);
+				
+				var styleEl = this._getStyleEl();
+				
+				if (this.cfg.content instanceof iup.layout.Panel) {
+					this.cfg.content.doLayout($(styleEl).width(), $(styleEl).height());
+				}
+			},
+			setContent : function(item) {
+				this.cfg.content = item;
+				$(this._getStyleEl()).empty();
+				this._getStyleEl().appendChild (item.getEl());
 				
 				var styleEl = this._getStyleEl();
 				
@@ -561,6 +572,7 @@ iup.utils.createComponent('iup.layout.TabPanel', iup.layout.Panel,
 			
 			var button = new iup.Button({
 				text : item.title,
+				icon : item.icon,
 				className : "tab-button" + (cfg.buttonsPosition === 'top' ? " htab-button" : " vtab-button"),
 				style	: style,
 				handler : function () {
@@ -573,9 +585,12 @@ iup.utils.createComponent('iup.layout.TabPanel', iup.layout.Panel,
 				}
 			});
 			
+			var shift = cfg.buttonsPosition === 'top' ? 'bottom' : 'right';
+			button.getEl().style[shift] = -1;
+			
 			if (item.closable) {
 				var closeButton = document.createElement('div');
-				button._getStyleEl().appendChild(closeButton);
+				button.getEl().appendChild(closeButton);
 				closeButton.className = 'close-tab-button'
 				closeButton.onclick = function(event) {
 					
@@ -690,10 +705,9 @@ iup.utils.createComponent('iup.layout.TabPanel', iup.layout.Panel,
 					
 					var buttons = this.tabButtonsPanel.children;
 					for (var i = 0; i < buttons.length; i++) {
-						$(buttons[i]).removeClass("selected");
+						$(buttons[i]).find('button').removeClass("selected");
 					};
-					$(buttons[idx]).addClass("selected");
-					console.log(this.cfg.items);
+					$(buttons[idx]).find('button').addClass("selected");
 					var item = this.cfg.items[idx];
 					if (typeof item.onDisclose === "function") {
 						item.onDisclose(true);

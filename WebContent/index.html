@@ -11,6 +11,7 @@
 <script type="text/javascript" src="js/iup/EventManager.js"></script>
 <script type="text/javascript" src="js/iup/Store.js"></script>
 <script type="text/javascript" src="js/iup/DnD.js"></script>
+<script type="text/javascript" src="js/iup/Window.js"></script>
 
 <script type="text/javascript">
 	$(document).ready( function() {
@@ -26,36 +27,84 @@
 			})
 		});
 		
-		var scrollPanel = new iup.layout.ScrollPanel({
-			scroll : iup.layout.ScrollPanel.SCROLL_BOTH,
-			step : 20,
-			style : {width : '200px'},
+		function createSampleTab(url) {
+			var textArea = document.createElement('textarea');
+			textArea.style.width = '100%';
+			textArea.style.height = '100%';
+			
+			textArea.onkeydown = function(e) {
+				var keyCode = e.keyCode || e.which;
+
+				if (keyCode == 9) {
+					e.preventDefault();
+					var start = $(this).get(0).selectionStart;
+					var end = $(this).get(0).selectionEnd;
+
+					// set textarea value to: text before caret + tab + text after caret
+					$(this).val($(this).val().substring(0, start)
+								+ "    "
+								+ $(this).val().substring(end));
+
+					// put caret at right position again
+					$(this).get(0).selectionStart = 
+					$(this).get(0).selectionEnd = start + 4;
+				}
+			}
+			
+			if (url) {
+				$.ajax({
+					url: url,
+					dataType :'text',
+					success : function(data,b,c) {
+						textArea.value = data;
+					}
+				})
+			}
+		
+			return new iup.layout.Panel({
+				style: {
+					backgroundColor:'#aaa', 
+					overflow:'hidden'
+				},
+				items : [textArea]
+			});
+
+		}
+		
+		var samples = new iup.layout.TabPanel({
 			items : [
-				new iup.layout.Panel({
-					style : {backgroundColor : 'yellow', border: '1px solid #333'},
-					height : '100'
-				}),
-				new iup.layout.Panel({
-					style : {backgroundColor : '#aaa', border: '1px solid #3f3'},
-					height : '100'
-				}),
-				new iup.layout.Panel({
-					style : {backgroundColor : '#faa', border: '1px solid #33f'},
-					height : '100'
-				}),
-				new iup.layout.Panel({
-					style : {backgroundColor : 'yellow', border: '1px solid #333'},
-					height : '100'
-				}),
-				new iup.layout.Panel({
-					style : {backgroundColor : '#aaa', border: '1px solid #3f3'},
-					height : '100'
-				}),
-				new iup.layout.Panel({
-					style : {backgroundColor : '#faa', border: '1px solid #33f'},
-					height : '100'
-				}),
+				{ title : 'Tabs', content : createSampleTab('samples/Tabs.js')},
+				{ title : 'Grid', content : createSampleTab('samples/Grid.js')},
+				{ title : 'Window', content : createSampleTab('samples/Window.js')}
 			]
+		})
+		
+		
+		var execute = new iup.Button({
+			text:"EXECUTE", 
+			className : 'button edit',
+			handler : function() {
+				//console.log();
+				var script = $(samples.disclosedItem.content.getEl()).find('textarea').val();
+				var exec;
+				
+				try{
+					eval('exec = function() {' + script + '}');
+				} catch (e) {
+					console.log(e);
+					iup.popup.Notification.notify({
+						type : 'error',
+						title : 'Excecution failed',
+						message : e
+					});
+				}
+				if (typeof exec === 'function') {
+					var ret = exec();
+					if (ret instanceof iup.layout.Panel) {
+						stretchPanel.setContent(ret);
+					}
+				}
+			}
 		});
 		
 		var store = new iup.data.Store({
@@ -120,20 +169,27 @@
 			buttonsPosition : 'top',
 			//buttonsSize : 150,
 			items	: [
-				{title : "A", content : new iup.layout.Panel({style: {backgroundColor:'#aaf'}})},     	   
+				{title : "A", icon : 'svg/save.svg',content : new iup.layout.Panel({style: {backgroundColor:'#aaf'}})},     	   
 				{title : "B", content : grid}, 
 				{title : "C", closable : true, content : new iup.layout.Panel({style: {backgroundColor:'#faa'}})},     	 
 			]
 		});
 		
 		var borderPanel = new iup.layout.BorderPanel({
-			layoutConfig : {top : 150, bottom : 30, left : 100, right : 50},
+			layoutConfig : {top : 150, bottom : 30, left : 500, right : 50},
 			top 	: tabPanel,
 			bottom 	: new iup.layout.Toolbar({
 				style	: {backgroundColor:'#aaf', padding : '5px'},
 				marginBetweenItems : 5,
 				items	: [
-		     		new iup.Button({text:"A", className : 'button edit'}), 
+					execute,
+		     		new iup.Button({
+						text:"Ajax", 
+						className : 'button edit',
+						handler : function() {
+							
+						}
+					}), 
 					new iup.Button({
 						text : "Add", 
 						className : 'button edit',
@@ -157,7 +213,7 @@
 					maskButton
 		     	]
 			}),
-			left 	: scrollPanel,//new iup.layout.Panel({style: {backgroundColor:'#aaa'}}),
+			left 	: samples,//scrollPanel,//new iup.layout.Panel({style: {backgroundColor:'#aaa'}}),
 			right 	: new iup.layout.Panel({style: {backgroundColor:'#faa'}}),
 			center	: stretchPanel
 		});
@@ -168,33 +224,7 @@
 			content : borderPanel
 		});
 		
-		/*var win = new util.Window({
-			title : "someTitle",
-			width: 200,
-			height : 150,
-			modal : false,
-			minimizable : true
-			
-		});
-		win.show();
 		
-		new util.Window({
-			title : "someTitle2",
-			width: 200,
-			height : 150,
-			//modal : false,
-			minimizable : true
-			
-		}).show();
-		
-		new util.Window({
-			title : "someTitle3",
-			width: 200,
-			height : 150,
-			modal : false,
-			minimizable : true
-			
-		}).show();*/
 	});
 </script>
 
