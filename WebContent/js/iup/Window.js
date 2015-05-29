@@ -65,8 +65,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 	 			}
 	 		},
 	 		mouseDown	: function(e, element) {
-				console.log(win);
-	       		mouseOffset = getMouseOffset(element, e);
+				mouseOffset = getMouseOffset(element, e);
 	       		dragStartPosition = {x : e.pageX, y : e.pageY};
 	       		prevDragPosition = {x : e.pageX, y : e.pageY};
 	       		currentElement = element;
@@ -224,7 +223,6 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 			
 			thumb.onclick = function(){
 				self.restore();
-				console.log(self);
 				var height = $(window).height();
 				animatedMove.call(self,{
 					end : {
@@ -288,7 +286,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 				style	: {padding : '3px'},
 				content	: new iup.layout.Toolbar({
 					items	: [ 
-						new iup.layout.Element({className	: 'window-title', html : this.cfg.title}),
+						new iup.form.Label({className	: 'window-title', text : this.cfg.title}),
 						'->',
 						minimizeButton,
 						this._state.closeButton

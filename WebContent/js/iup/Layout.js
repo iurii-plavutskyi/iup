@@ -625,7 +625,7 @@ iup.utils.createComponent('iup.layout.TabPanel', iup.layout.Panel,
 					tabButtonsPanel.style.top = '0px';
 					tabButtonsPanel.style.left = '0px';
 					if (cfg.buttonsPosition === 'top') {
-						tabButtonsPanel.style.height = cfg.buttonsSize + 'px';
+						//tabButtonsPanel.style.height = cfg.buttonsSize + 'px';
 						tabButtonsPanel.style.right = '0px';
 					} else {
 						tabButtonsPanel.style.bottom = '0px';
@@ -639,7 +639,7 @@ iup.utils.createComponent('iup.layout.TabPanel', iup.layout.Panel,
 					
 					if (cfg.buttonsPosition === 'top') {
 						content.style.left = '0px';
-						content.style.top = cfg.buttonsSize + 'px';
+						//content.style.top = cfg.buttonsSize + 'px';
 					} else {
 						content.style.left = cfg.buttonsSize + 'px';
 						content.style.top = '0px';
@@ -668,8 +668,22 @@ iup.utils.createComponent('iup.layout.TabPanel', iup.layout.Panel,
 					if (this.cfg.items.length === 1) {
 						this.discloseItem(0);
 					}
+					
+					if (this.cfg.buttonsPosition === 'top') {
+						this.content.style.top = $(this.tabButtonsPanel).outerHeight();
+						if (this.disclosedItem) {
+							this.disclosedItem.content.doLayout($(this.content).width(), $(this.content).height());
+						}
+					}
 				},
 				removeItem : function(idx) {
+					var proceed = true;
+					var item = this.cfg.items[idx];
+					if (typeof item.beforeclose == "function") {
+						if (item.beforeclose() === false) {
+							return;
+						}
+					}
 					var cfg = this.cfg;
 					var contents = this.content.children;
 					this.content.removeChild(contents[idx]);
@@ -677,7 +691,6 @@ iup.utils.createComponent('iup.layout.TabPanel', iup.layout.Panel,
 					var buttons = this.tabButtonsPanel.children;
 					this.tabButtonsPanel.removeChild(buttons[idx]);
 					
-					var item = this.cfg.items[idx];
 					this.cfg.items.splice(idx, 1);
 					if (this.disclosedItem === item) {
 						if (buttons.length > idx) {
@@ -686,10 +699,21 @@ iup.utils.createComponent('iup.layout.TabPanel', iup.layout.Panel,
 							this.discloseItem(idx-1);
 						}
 					}
+					
+					if (this.cfg.buttonsPosition === 'top') {
+						this.content.style.top = $(this.tabButtonsPanel).outerHeight();
+						if (this.disclosedItem) {
+							this.disclosedItem.content.doLayout($(this.content).width(), $(this.content).height());
+						}
+					}
 				},
 				doLayout : function(width, height) {
 					iup.layout.TabPanel.superclass.doLayout.call(this, width, height);
-
+					
+					if (this.cfg.buttonsPosition === 'top') {
+						this.content.style.top = $(this.tabButtonsPanel).outerHeight();
+					}
+					
 					if (this.disclosedItem) {
 						this.disclosedItem.content.doLayout($(this.content).width(), $(this.content).height());
 					} else {

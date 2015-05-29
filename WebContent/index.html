@@ -12,9 +12,34 @@
 <script type="text/javascript" src="js/iup/Store.js"></script>
 <script type="text/javascript" src="js/iup/DnD.js"></script>
 <script type="text/javascript" src="js/iup/Window.js"></script>
+<script type="text/javascript" src="js/iup/DB.js"></script>
+<script type="text/javascript" src="js/iup/Form.js"></script>
 
 <script type="text/javascript">
 	$(document).ready( function() {
+		var localSamples = [];
+		var db = new iup.db.Connector({
+			name : 'iup',
+			upgrade : function (db) {
+				/*var objectStore = */db.createObjectStore("samples", { keyPath: "id", autoIncrement : true });
+			},
+			onconnect : function() {
+				db.list('samples', function(items) {
+					localSamples = items;
+					for (var i = 0; i < items.length; i++) {
+						var sample = items[i];
+						addLocalSampleTab(sample);
+						/*var tab = createSampleTab();
+						tab.cfg.items[0].value = sample.content;
+						samples.addItem({title:sample.title, content : tab, closable : true, beforeclose: function(){console.log(this);}, id : sample.id});*/
+					}
+				});
+				
+				
+			},
+			version : 1
+		});
+	
 		var el = new iup.layout.Element({style: {border : '1px solid', backgroundColor:'#999', width : '100px', height : '100px'}});
 		var panel = new iup.layout.Panel({style: {backgroundColor:'#aff'}});
 	
@@ -79,13 +104,28 @@
 			]
 		})
 		
-		
 		var execute = new iup.Button({
 			text:"EXECUTE", 
 			className : 'button edit',
 			handler : function() {
 				//console.log();
+				
 				var script = $(samples.disclosedItem.content.getEl()).find('textarea').val();
+				
+				//console.log(samples.disclosedItem);
+				if (samples.disclosedItem.id) {
+					for (var i = 0; i < localSamples.length; i++) {
+						var sample = localSamples[i];
+						if (sample.id === samples.disclosedItem.id) {
+							sample.content = script;
+							//console.log (sample);
+							//
+							db.put('samples', sample, function(id) {console.log('object saved; ID: ' + id)});
+						}
+					}
+					
+				}
+				
 				var exec;
 				
 				try{
@@ -175,6 +215,60 @@
 			]
 		});
 		
+		function addLocalSampleTab(sample){
+			var tab = createSampleTab();
+			tab.cfg.items[0].value = sample.content;
+			samples.addItem({
+				id : sample.id,
+				title:sample.title, 
+				content : tab, 
+				closable : true, 
+				beforeclose: function(){
+					db.remove('samples', sample.id, function() {
+						localSamples.splice(localSamples.indexOf(sample), 1);
+						console.log(localSamples);
+					});
+				} 
+			});
+		}
+		
+		var sampleTabName = new iup.form.Field({
+			label : 'Tab Name:',
+			name : 'tabName',
+			required : true
+		});
+		var tabNameWin = new iup.popup.Window({
+			width : 300,
+			height : 50,
+			//title : "Modal Window",
+			content : new iup.form.FieldSet({
+				labelWidth : 100,
+				fields : [sampleTabName]
+			}),
+			bbar : [
+				'->',
+				new iup.Button ({
+					text : 'OK',
+					className : 'button edit',
+					handler : function() {
+						if (sampleTabName.validate()) {
+							console.log(sampleTabName.getField().get());
+							var newSample = {
+								title : sampleTabName.getField().get(),
+								content : ''
+							} 
+							db.put('samples', newSample, function(id) {
+								//console.log(id, newSample);
+								localSamples.push(newSample);
+								addLocalSampleTab(newSample);
+							});
+							tabNameWin.hide();
+						}
+					}
+				})
+			]
+		})
+		
 		var borderPanel = new iup.layout.BorderPanel({
 			layoutConfig : {top : 150, bottom : 30, left : 500, right : 50},
 			top 	: tabPanel,
@@ -183,29 +277,11 @@
 				marginBetweenItems : 5,
 				items	: [
 					execute,
-		     		new iup.Button({
-						text:"Ajax", 
-						className : 'button edit',
-						handler : function() {
-							
-						}
-					}), 
 					new iup.Button({
 						text : "Add", 
 						className : 'button edit',
 						handler : function() {
-							tabPanel.addItem({
-								title : 'T' + new Date().getTime(),
-								closable : true,
-								content : new iup.layout.Panel({style: {backgroundColor:'#aaa'}}) 
-							})
-						}
-					}),
-					new iup.Button({
-						text:"Remove", 
-						className : 'button edit',
-						handler : function() {
-							tabPanel.removeItem(4);
+							tabNameWin.show();
 						}
 					}),
 					'->', 

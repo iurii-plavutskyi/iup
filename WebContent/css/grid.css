@@ -583,6 +583,12 @@ border-bottom : 1px solid #579;*/
 	color: #fff;
 }
 
+.spin-box {
+	width : 100%;
+	text-align : right;
+	padding-right : 13px;
+}
+
 .number-spin {
 	width : 10px;
 	height : 18px;
@@ -591,9 +597,13 @@ border-bottom : 1px solid #579;*/
 	right : 1px;
 }
 
+.disabled .number-spin {
+	display : none;
+}
+
 .number-inc {
-	width : 10px;
-	height : 9px;
+	width : 9px;
+	height : 8px;
 	border-left : 1px solid #5384A9;
 	border-bottom : 1px solid #5384A9;
 	background-color : #d0d8df;
@@ -601,8 +611,8 @@ border-bottom : 1px solid #579;*/
 }
 
 .number-dec {
-	width : 10px;
-	height : 9px;
+	width : 9px;
+	height : 8px;
 	border-left : 1px solid #5384A9;
 	border-top : 1px solid #5384A9;
 	background-color : #d0d8df;

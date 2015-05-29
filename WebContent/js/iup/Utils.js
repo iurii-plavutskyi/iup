@@ -48,21 +48,25 @@ iup.utils.createComponent = function(name, parent, oCfg) {
 		type = cfg.construct;
 	} else {
 		type = function (oCfg) {
+			
 			this.cfg = iup.utils.merge(cfg.defaults, oCfg);
-			if (pack[className].superclass) {
-				pack[className].superclass.constructor.call(this, this.cfg);
-			}
 			
 			if (cfg.events) {
 				this.events = new iup.EventManager({
 					events : cfg.events
 				});
 				if (this.cfg.handlers) {
-					for (var idx in this.cfg.handlers){
+					for (var idx in this.cfg.handlers) {
 						this.events.on(idx, this.cfg.handlers[idx]);
 					}
 				}
 			}
+			
+			if (pack[className].superclass) {
+				pack[className].superclass.constructor.call(this, this.cfg);
+			}
+			
+			
 			
 			if (typeof cfg._init == 'function') {
 				cfg._init.call(this);
