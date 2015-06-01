@@ -457,7 +457,7 @@ border-bottom : 1px solid #579;*/
 	//border-bottom : 0px;
 	background-color : #ccc;
 	position: relative; 
-	z-index:1;
+	//z-index:1;
 }
 
 .window-close{
@@ -555,17 +555,30 @@ border-bottom : 1px solid #579;*/
 	top : 1px;
 	border-left : 1px solid #5384A9;
 	background-color : #d0d8df;
-	background-image : url("../img/dropdown.png");
+	background-image : url("../svg/dropdown.svg");
 	background-repeat : no-repeat;
 }
 
 .combo-list{
 	position : absolute;
-	border : 1px solid black;
+	border : 0px solid #5384A9;
+	border-top-width : 1px;
+	border-bottom-width : 1px;
 	overflow : auto;
 	background : #fff;
 	color : #000;
-	padding-right : 22px;
+	//padding-right : 22px;
+}
+
+.combo-list::before{
+	border-right: 1px solid #5384A9;
+	border-left: 1px solid #5384A9;
+	content:"";
+	position:absolute;
+	top:0px;
+	left:0px;
+	right:0px;
+	bottom:0px;
 }
 
 .combo-list ul{
@@ -718,4 +731,28 @@ border-bottom : 1px solid #579;*/
     bottom: 3px;
     right: 0;
 	border-top-width: 4px;
+}
+
+.splitter{
+	position : absolute;
+	background-color:#aaa;
+	border : 0px solid #777;
+} 
+
+.v-splitter{
+	width : 3px;
+	top : 0px;
+	bottom : 0px;
+	cursor : ew-resize;
+	border-left-width : 1px;
+	border-right-width : 1px;
+}
+
+.h-splitter{
+	height : 3px;
+	left : 0px;
+	right : 0px;
+	cursor : ns-resize;
+	border-top-width : 1px;
+	border-bottom-width : 1px;
 }

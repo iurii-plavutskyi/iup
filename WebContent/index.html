@@ -14,6 +14,7 @@
 <script type="text/javascript" src="js/iup/Window.js"></script>
 <script type="text/javascript" src="js/iup/DB.js"></script>
 <script type="text/javascript" src="js/iup/Form.js"></script>
+<script type="text/javascript" src="js/iup/ComboBox.js"></script>
 
 <script type="text/javascript">
 	$(document).ready( function() {
@@ -100,7 +101,8 @@
 			items : [
 				{ title : 'Tabs', content : createSampleTab('samples/Tabs.js')},
 				{ title : 'Grid', content : createSampleTab('samples/Grid.js')},
-				{ title : 'Window', content : createSampleTab('samples/Window.js')}
+				{ title : 'Window', content : createSampleTab('samples/Window.js')},
+				{ title : 'Form', content : createSampleTab('samples/Form.js')}
 			]
 		})
 		
@@ -270,7 +272,9 @@
 		})
 		
 		var borderPanel = new iup.layout.BorderPanel({
+			//style : {backgroundColor : 'red'},
 			layoutConfig : {top : 150, bottom : 30, left : 500, right : 50},
+			splitter : ['top','bottom', 'left', 'right'],
 			top 	: tabPanel,
 			bottom 	: new iup.layout.Toolbar({
 				style	: {backgroundColor:'#aaf', padding : '5px'},

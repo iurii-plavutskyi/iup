@@ -244,11 +244,11 @@ iup.utils.createComponent('iup.layout.ScrollPanel', iup.layout.Panel,
 			this._getStyleEl().style.top = -s.offsetY + 'px';
 			this._getStyleEl().style.left = -s.offsetX + 'px';
 			
-			var bothScrolls = this.cfg.scroll === constants.SCROLL_BOTH && (s.contentHeight > s.bodyHeight && s.contentWidth > s.bodyWidth);
-			var vScrollerOffset = (s.bodyHeight - s.vScrollerSize - (bothScrolls ? constants.SCROLLBAR_WIDTH : 0)) * s.offsetY / (s.contentHeight - s.bodyHeight);
+			var bothScrolls = this.cfg.scroll === statics.SCROLL_BOTH && (s.contentHeight > s.bodyHeight && s.contentWidth > s.bodyWidth);
+			var vScrollerOffset = (s.bodyHeight - s.vScrollerSize - (bothScrolls ? statics.SCROLLBAR_WIDTH : 0)) * s.offsetY / (s.contentHeight - s.bodyHeight);
 			this.vScroll.children[0].style.top = vScrollerOffset + 'px';
 			
-			var hScrollerOffset = (s.bodyWidth - s.hScrollerSize - (bothScrolls ? constants.SCROLLBAR_WIDTH : 0)) * s.offsetX / (s.contentWidth - s.bodyWidth);
+			var hScrollerOffset = (s.bodyWidth - s.hScrollerSize - (bothScrolls ? statics.SCROLLBAR_WIDTH : 0)) * s.offsetX / (s.contentWidth - s.bodyWidth);
 			this.hScroll.children[0].style.left = hScrollerOffset + 'px';
 			
 			return {x : s.offsetX - prevOffset.x, y : s.offsetY - prevOffset.y};
@@ -261,15 +261,15 @@ iup.utils.createComponent('iup.layout.ScrollPanel', iup.layout.Panel,
 			var bodyWidth = $(this.getEl()).width();
 			var contentWidth = $(this._getStyleEl()).width();
 			
-			if (this.cfg.scroll === constants.SCROLL_BOTH && (contentHeight > bodyHeight || contentWidth > bodyWidth)) {
-				if (contentHeight + constants.SCROLLBAR_WIDTH > bodyHeight) {
-					contentWidth += constants.SCROLLBAR_WIDTH;
+			if (this.cfg.scroll === statics.SCROLL_BOTH && (contentHeight > bodyHeight || contentWidth > bodyWidth)) {
+				if (contentHeight + statics.SCROLLBAR_WIDTH > bodyHeight) {
+					contentWidth += statics.SCROLLBAR_WIDTH;
 				} 
 				if (contentWidth > bodyWidth) {
-					contentHeight += constants.SCROLLBAR_WIDTH;
+					contentHeight += statics.SCROLLBAR_WIDTH;
 				}
 			}
-			var bothScrolls = this.cfg.scroll === constants.SCROLL_BOTH &&(contentHeight > bodyHeight && contentWidth > bodyWidth);
+			var bothScrolls = this.cfg.scroll === statics.SCROLL_BOTH &&(contentHeight > bodyHeight && contentWidth > bodyWidth);
 			
 			if (bothScrolls) {
 				this.vScroll.style.bottom = '10px';
@@ -279,16 +279,16 @@ iup.utils.createComponent('iup.layout.ScrollPanel', iup.layout.Panel,
 				this.hScroll.style.right = '0px';
 			}
 			
-			if (contentHeight > bodyHeight && this.cfg.scroll !== constants.SCROLL_HORIZONTAL) {
+			if (contentHeight > bodyHeight && this.cfg.scroll !== statics.SCROLL_HORIZONTAL) {
 				this.vScroll.style.display = "block";
 				this.scrollData.vScrollVisible = true;
 				
-				if (this.cfg.scroll === constants.SCROLL_VERTICAL) {
+				if (this.cfg.scroll === statics.SCROLL_VERTICAL) {
 					this._getStyleEl().style.marginRight = '10px';
 					contentHeight = $(this._getStyleEl()).height();
 				}
 				
-				this.scrollData.vScrollerSize = Math.max(bodyHeight * bodyHeight / contentHeight - (bothScrolls ? constants.SCROLLBAR_WIDTH : 0), 8);
+				this.scrollData.vScrollerSize = Math.max(bodyHeight * bodyHeight / contentHeight - (bothScrolls ? statics.SCROLLBAR_WIDTH : 0), 8);
 				this.vScroll.children[0].style.height = this.scrollData.vScrollerSize + "px";
 			} else {
 				this.scrollData.vScrollVisible = false;
@@ -296,15 +296,15 @@ iup.utils.createComponent('iup.layout.ScrollPanel', iup.layout.Panel,
 				this._getStyleEl().style.marginRight = '0px';
 			}
 			
-			if (contentWidth > bodyWidth && this.cfg.scroll !== constants.SCROLL_VERTICAL) {
+			if (contentWidth > bodyWidth && this.cfg.scroll !== statics.SCROLL_VERTICAL) {
 				this.hScroll.style.display = "block";
 				this.scrollData.hScrollVisible = true;
-				/*if (this.cfg.scroll === constants.SCROLL_HORIZONTAL) {
+				/*if (this.cfg.scroll === statics.SCROLL_HORIZONTAL) {
 					this._getStyleEl().style.marginBottom = '10px';
 					contentWidth = $(this._getStyleEl()).width();
 				}*/
 				
-				this.scrollData.hScrollerSize = Math.max(bodyWidth * bodyWidth / contentWidth - (bothScrolls ? constants.SCROLLBAR_WIDTH : 0), 8);
+				this.scrollData.hScrollerSize = Math.max(bodyWidth * bodyWidth / contentWidth - (bothScrolls ? statics.SCROLLBAR_WIDTH : 0), 8);
 				this.hScroll.children[0].style.width = this.scrollData.hScrollerSize + "px";
 			} else {
 				this.hScroll.style.display = "none";
@@ -320,7 +320,7 @@ iup.utils.createComponent('iup.layout.ScrollPanel', iup.layout.Panel,
 			scroll.call(this, 0, 0);
 		}
 		
-		var constants = {
+		var statics = {
 			SCROLL_VERTICAL : 'vertical',
 			SCROLL_HORIZONTAL : 'horizontal',
 			SCROLL_BOTH : 'both',
@@ -328,9 +328,9 @@ iup.utils.createComponent('iup.layout.ScrollPanel', iup.layout.Panel,
 		}
 		
 		return {
-			constants : constants,
+			statics : statics,
 			defaults : {
-				scroll  : constants.SCROLL_VERTICAL, // 'horizontal', 'both'
+				scroll  : statics.SCROLL_VERTICAL, // 'horizontal', 'both'
 				step : undefined
 			},
 			prototype : {
@@ -367,9 +367,9 @@ iup.utils.createComponent('iup.layout.ScrollPanel', iup.layout.Panel,
 					}
 					
 					var vScroller = document.createElement("div");
-					this.vScroll = iup.utils.createEl({tag:"div", className:"scrollbar v-scrollbar", style : {display:"none"}, content:vScroller});
+					this.vScroll = iup.utils.createEl("div", {className:"scrollbar v-scrollbar", style : {display:"none"}, content:vScroller});
 					var hScroller = document.createElement("div");
-					this.hScroll = iup.utils.createEl({tag:"div", className:"scrollbar h-scrollbar", style : {display:"none"}, content:hScroller});
+					this.hScroll = iup.utils.createEl("div", {className:"scrollbar h-scrollbar", style : {display:"none"}, content:hScroller});
 					this.scrollData = {};
 					
 					wrapper.appendChild(el);
@@ -441,110 +441,280 @@ iup.utils.createComponent('iup.layout.StretchPanel', iup.layout.Panel,
 		}
 	});
 	
-iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel, 
-	{	
+iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel, function () {
+	var statics = {
+		SPLITTER_TOP : 'top',
+		SPLITTER_BOTTOM : 'bottom',
+		SPLITTER_LEFT : 'left',
+		SPLITTER_RIGHT : 'right'
+	};
+	function splitter(position, cfg) {
+		return cfg.splitter.indexOf(position) > -1 ? 5 : 0;
+	}
+	function getPanelEl(item) {
+		return item instanceof iup.layout.Panel ? item.getEl() : undefined
+	}
+	
+	function DragManager(panel) {
+	    var mouseOffset,
+			currentElement,
+			prevDragPosition;
+			var updates;
+			var startTime;
+	 	var cfg = panel.cfg;
+	 	var dragMaster = new iup.DragMaster({
+	 		mouseUp		: function() {
+				document.getElementsByTagName("body")[0].style.cursor = '';
+				console.log(updates + ' updates in ' + (new Date().getTime() - startTime) + 'ms.')
+	 		},
+	 		mouseMove	: function (e) {
+				var delta = { 
+					x : prevDragPosition.x - e.pageX, 
+					y : prevDragPosition.y - e.pageY
+				};
+				
+				switch (currentElement.position) {
+					case statics.SPLITTER_TOP : 
+						cfg.layoutConfig.top = -delta.y + cfg.layoutConfig.top;
+						break;
+					case statics.SPLITTER_BOTTOM : 
+						cfg.layoutConfig.bottom = delta.y + cfg.layoutConfig.bottom; 
+						break;
+					case statics.SPLITTER_LEFT : 
+						cfg.layoutConfig.left = -delta.x + cfg.layoutConfig.left; 
+						break;
+					case statics.SPLITTER_RIGHT : 
+						cfg.layoutConfig.right = delta.x + cfg.layoutConfig.right; 
+						break;
+				}
+				updates++;
+				requestAnimationFrame(function() {
+					panel.applyLayoutConfig();
+				})
+				
+				prevDragPosition = {x : e.pageX, y : e.pageY};
+				/*
+				if (currentElement.position === statics.SPLITTER_TOP) {
+					var total = self.scrollData.bodyHeight-self.scrollData.vScrollerSize;
+					var scale = (self.scrollData.contentHeight - self.scrollData.bodyHeight)/total;
+					var scrollAmount = - scale * delta;
+					var scrolled = scroll.call(self,0, scrollAmount).y / scale;
+
+					prevDragPosition.y += Math.round(scrolled);
+				}
+				
+				if (axis === 'X') {
+					var delta = prevDragPosition.x - e.pageX;
+					var total = self.scrollData.bodyWidth-self.scrollData.hScrollerSize;
+					var scale = (self.scrollData.contentWidth - self.scrollData.bodyWidth)/total;
+					var scrollAmount = - scale * delta;
+					var scrolled = scroll.call(self, - scale * delta, 0).x / scale;
+					prevDragPosition.x += Math.round(scrolled);
+				}
+				*/
+			},
+			mouseDown	: function(e, element) {
+				updates = 0;
+				startTime = new Date().getTime();
+				mouseOffset = getMouseOffset(element, e);
+				prevDragPosition = {x : e.pageX, y : e.pageY};
+				currentElement = element;
+				document.getElementsByTagName("body")[0].style.cursor = element.style.cursor;
+				return true;
+			}
+	 	});
+	 	
+	 	function getMouseOffset(target, e) {
+	        var docPos  = iup.DragMaster.getPosition(target);
+	        return {x:e.pageX - docPos.x + cfg.resizeBorder + 1, y:e.pageY - docPos.y + cfg.resizeBorder + 1};
+	    }
+	 	
+	    this.makeDraggable = function(element){
+	    	dragMaster.makeDraggable(element);
+	    };
+	    
+	}
+	
+	return {	
+		statics : statics,
 	 	defaults : {
 	 		layoutConfig : {
 	 			top : 0,
 				bottom : 0,
 				left : 0,
 				right : 0
-	 		}
+	 		},
+			splitter : []
 	 	},
 		prototype : {
 			_buildEl : function(cfg) {
-				var el = document.createElement('table');
-				el.style.width = "100%";
-				el.style.height = "100%";
+								
+				var top = iup.utils.createEl("div", {
+					style : {
+						position : 'absolute',
+						top : '0px',
+						left : '0px',
+						right : '0px',
+					//	height : cfg.layoutConfig.top + 'px'
+					},
+					content : getPanelEl(cfg.top)
+				});
 				
-				var columns = 1;
-				if (cfg.left && cfg.layoutConfig.left > 0) {columns++;} 
-				if (cfg.right && cfg.layoutConfig.right > 0) {columns++;} 
+				var left = iup.utils.createEl("div", {
+					style : {
+						position : 'absolute',
+						top : '0px',
+						left : '0px',
+					//	width : cfg.layoutConfig.left + 'px',
+						bottom : '0px'
+					},
+					content : getPanelEl(cfg.left)
+				});
 				
-				var tbody = document.createElement('tbody');
-					el.appendChild(tbody);
-				
-				if (cfg.top && cfg.layoutConfig.top > 0) {
-					var trTop = document.createElement('tr');
-						tbody.appendChild(trTop);	
-					var top = document.createElement('td');
-						top.style.verticalAlign = 'top';
-						$(top).attr('colspan', columns);
-						trTop.appendChild(top);
-						top.style.height = cfg.layoutConfig.top + 'px';
-					if (cfg.top instanceof iup.layout.Panel) {
-						//this._items.push(cfg.top);
-						top.appendChild(cfg.top.getEl());
+				var leftSplitter = iup.utils.createEl("div", {
+					className : 'splitter v-splitter',
+					style : {
+						left : '-5px',
+						display : splitter(statics.SPLITTER_LEFT, cfg) ? 'block' : 'none'
 					}
-				}
+				});
+				leftSplitter.position = statics.SPLITTER_LEFT;
 				
-				var trMid = document.createElement('tr');
-					tbody.appendChild(trMid);
-				
-				if (cfg.left && cfg.layoutConfig.left > 0) {
-					var left = document.createElement('td');
-						left.style.verticalAlign = 'top';
-						trMid.appendChild(left);
-						left.style.width = cfg.layoutConfig.left + 'px';	
-					if (cfg.left instanceof iup.layout.Panel) {
-						//this._items.push(cfg.left);
-						left.appendChild(cfg.left.getEl());
+				var rightSplitter = iup.utils.createEl("div", {
+					className : 'splitter v-splitter',
+					style : {
+						right : '-5px',
+						display : splitter(statics.SPLITTER_RIGHT, cfg) ? 'block' : 'none'
 					}
-				}
-					
-				var center = document.createElement('td');
-					center.style.verticalAlign = 'top';
-					trMid.appendChild(center);
+				});
+				rightSplitter.position = statics.SPLITTER_RIGHT;
 				
-				if (cfg.center instanceof iup.layout.Panel) {
-					//this._items.push(cfg.center);
-					center.appendChild(cfg.center.getEl());
-				}
+				var center = iup.utils.createEl("div", {
+					style : {
+						position : 'absolute',
+						top : '0px',
+					//	left : cfg.layoutConfig.left + splitter(statics.SPLITTER_LEFT, cfg) + 'px',
+					//	right : cfg.layoutConfig.right + splitter(statics.SPLITTER_RIGHT, cfg) + 'px',
+						bottom : '0px'
+					},
+					content : [leftSplitter, getPanelEl(cfg.center), rightSplitter]
+				});
+						
+				var right = iup.utils.createEl("div", {
+					style : {
+						position : 'absolute',
+						top : '0px',
+					//	width : cfg.layoutConfig.right + 'px',
+						right : '0px',
+						bottom : '0px'
+					},
+					content : getPanelEl(cfg.right)
+				});
 				
-				if (cfg.right && cfg.layoutConfig.right > 0) {
-					var right = document.createElement('td');
-						right.style.verticalAlign = 'top';
-						trMid.appendChild(right);
-						right.style.width = cfg.layoutConfig.right + 'px';
-					if (cfg.right instanceof iup.layout.Panel) {
-						//this._items.push(cfg.right);
-						right.appendChild(cfg.right.getEl());
-					}	
-				}
-					
-				if (cfg.bottom && cfg.layoutConfig.bottom > 0) {
-					var trBottom = document.createElement('tr');
-						tbody.appendChild(trBottom);
-					var bottom = document.createElement('td');
-						bottom.style.verticalAlign = 'top';
-						$(bottom).attr('colspan', columns);
-						trBottom.appendChild(bottom);
-						bottom.style.height = cfg.layoutConfig.bottom + 'px';
-					if (cfg.bottom instanceof iup.layout.Panel) {
-						//this._items.push(cfg.bottom);
-						bottom.appendChild(cfg.bottom.getEl());
+				var bottom = iup.utils.createEl("div", {
+					style : {
+						position : 'absolute',
+					//	height : cfg.layoutConfig.bottom + 'px',
+						left : '0px',
+						right : '0px',
+						bottom : '0px'
+					},
+					content : getPanelEl(cfg.bottom)
+				});
+				
+				var topSplitter = iup.utils.createEl("div", {
+					className : 'splitter h-splitter',
+					style : {
+						top : '-5px',
+						display : splitter(statics.SPLITTER_TOP, cfg) ? 'block' : 'none'
 					}
-				}
+				});
+				topSplitter.position = statics.SPLITTER_TOP;
 				
-				this._el = el;
+				var bottomSplitter = iup.utils.createEl("div", {
+					className : 'splitter h-splitter',
+					style : {
+						bottom : '-5px',
+						display : splitter(statics.SPLITTER_BOTTOM, cfg) ? 'block' : 'none'
+					}
+				});
+				bottomSplitter.position = statics.SPLITTER_BOTTOM;
+				
+				var mid = iup.utils.createEl("div", {
+					style : {
+						position : 'absolute',
+						//top : cfg.layoutConfig.top + splitter(statics.SPLITTER_TOP, cfg) + 'px',
+						left : '0px',
+						right : '0px',
+						//bottom : cfg.layoutConfig.bottom + splitter(statics.SPLITTER_BOTTOM, cfg) + 'px'
+					},
+					content : [topSplitter, left, center, right, bottomSplitter]
+				});
+				
+				
+				
+				this._el = iup.utils.createEl("div", {
+					className : "stretch",
+					content : [top, mid, bottom]
+				});
+				
+				this.applyLayoutConfig();
+				
+				var dragManager = new DragManager(this);
+				dragManager.makeDraggable(topSplitter);
+				dragManager.makeDraggable(bottomSplitter);
+				dragManager.makeDraggable(leftSplitter);
+				dragManager.makeDraggable(rightSplitter);
+			},
+			applyLayoutConfig : function(){
+				var cfg = this.cfg,
+					el = this.getEl(),
+					top = el.children[0],
+					mid = el.children[1],
+					bottom = el.children[2],
+					left = mid.children[1],
+					center = mid.children[2],
+					right = mid.children[3];
+				top.style.height = cfg.layoutConfig.top + 'px';
+				bottom.style.height = cfg.layoutConfig.bottom + 'px';
+				left.style.width = cfg.layoutConfig.left + 'px';
+				right.style.width = cfg.layoutConfig.right + 'px';
+				mid.style.top = cfg.layoutConfig.top + splitter(statics.SPLITTER_TOP, cfg) + 'px';
+				mid.style.bottom = cfg.layoutConfig.bottom + splitter(statics.SPLITTER_BOTTOM, cfg) + 'px';
+				center.style.left = cfg.layoutConfig.left + splitter(statics.SPLITTER_LEFT, cfg) + 'px';
+				center.style.right = cfg.layoutConfig.right + splitter(statics.SPLITTER_RIGHT, cfg) + 'px';
+				
+				this.doLayout();
 			},
 			doLayout : function(width, height) {
-				iup.layout.BorderPanel.superclass.doLayout.call(this, width, height);
+				if (width) {
+					this.cfg.width = width;
+				}
+				if (height) {
+					this.cfg.height = height;
+				}
+				if (width || height) {
+					iup.layout.BorderPanel.superclass.doLayout.call(this, this.cfg.width, this.cfg.height);
+				}
 				
 				var cfg = this.cfg;
-				var midWidth = width - cfg.layoutConfig.left - cfg.layoutConfig.right;
-				var midHeight = height - cfg.layoutConfig.top - cfg.layoutConfig.bottom;
+				var top = cfg.layoutConfig.top + splitter(statics.SPLITTER_TOP, this.cfg),
+					bottom = cfg.layoutConfig.bottom + splitter(statics.SPLITTER_BOTTOM, this.cfg),
+					left = cfg.layoutConfig.left + splitter(statics.SPLITTER_LEFT, this.cfg),
+					right = cfg.layoutConfig.right + splitter(statics.SPLITTER_RIGHT, this.cfg);
+				var midWidth = this.cfg.width - left - right;
+				var midHeight = this.cfg.height - top - bottom;
 				
 				if (cfg.center instanceof iup.layout.Panel) {
 					cfg.center.doLayout(midWidth, midHeight);
 				}
 				
 				if (cfg.top instanceof iup.layout.Panel) {
-					cfg.top.doLayout(width, cfg.layoutConfig.top);
+					cfg.top.doLayout(this.cfg.width, cfg.layoutConfig.top);
 				}
 				
 				if (cfg.bottom instanceof iup.layout.Panel) {
-					cfg.bottom.doLayout(width, cfg.layoutConfig.bottom);
+					cfg.bottom.doLayout(this.cfg.width, cfg.layoutConfig.bottom);
 				}
 				
 				if (cfg.left instanceof iup.layout.Panel) {
@@ -556,7 +726,8 @@ iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel,
 				}
 			}
 		}
-	});
+	}
+}());
 	
 iup.utils.createComponent('iup.layout.TabPanel', iup.layout.Panel, 
 	function () {

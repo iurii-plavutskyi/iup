@@ -24,6 +24,9 @@ iup.utils.createComponent('iup.form.Label', iup.layout.Element, {
 
 iup.utils.createComponent('iup.form.Field', iup.layout.Element, {	
 	//var cfg = {	// [{label:String, required:boolean, name : String, validator : function(val){}, renderer : function(val){}, parser : function(val){}}..]
+	/*statics : {
+		type : 'field',
+	},*/
 	defaults : {
 		label	: '',
 		name 		: undefined,
@@ -391,6 +394,9 @@ extend(iup.form.Field, iup.layout.Element);
 
 
 iup.utils.createComponent('iup.form.NumberField', iup.form.Field, {  
+	statics : {
+		type : 'number',
+	},
 	defaults : {
 		regex : /^[-]?\d*$/,
 		parser : function(val, fieldValue) {
@@ -409,6 +415,9 @@ iup.utils.createComponent('iup.form.NumberField', iup.form.Field, {
 })
 
 iup.utils.createComponent('iup.form.Spinbox', iup.form.NumberField, { 
+	statics : {
+		type : 'spinbox',
+	},
 	prototype : {
 		_buildEl : function(oCfg) {
 			var self = this;
@@ -496,6 +505,71 @@ iup.utils.createComponent('iup.form.Spinbox', iup.form.NumberField, {
 	}
 });
 
+iup.utils.createComponent('iup.form.CheckboxField', iup.form.Field, {
+	statics : {
+		type : 'checkbox',
+	},
+	prototype : {
+		_updateEl : function(el, val) {
+			if (val) {
+				el.checked = "checked";
+			} else {
+				el.checked = "";
+			}
+		},
+		_buildEl : function(cfg) {
+			//var em = this._eventManager;
+			var self = this;
+			
+			var ret = document.createElement("input");
+			ret.type = 'checkbox';
+			ret.className = "form-field";	
+			
+			if (cfg.field) {
+				this._updateEl(cfg.field.get());
+			}
+			
+			if (cfg.readOnly) {
+				ret.disabled = "disabled";
+			}
+			
+			this.events.on("changed", function(val, originalValue, bSilent) {
+				self.getField().set(val, bSilent);
+			});
+			
+			
+			ret.onchange = function() {
+				var val = ret.checked;
+				self.events.fireEvent("changed", val, self.getField().getOriginalValue(), true);
+			};
+			
+			var wrapper = document.createElement("div");
+			wrapper.appendChild(ret);
+			var text = document.createElement("span");
+			text.style.marginLeft = "10px";
+			text.innerHTML = cfg.text || "";
+			wrapper.appendChild(text);
+			wrapper.checkbox = ret;
+			this._el = wrapper;
+			return wrapper;//ret; 
+		},
+		_getRawValue : function() {
+			return this.getEl().checkbox.checked == "checked";
+		},
+		enable : function() {
+			this.getEl().checkbox.disabled = "";
+		},
+		disable : function() {
+			this.getEl().checkbox.disabled = "disabled";
+		},
+		updateEl : function(el, val) {
+			el.value = val;
+		}
+	}
+
+});
+
+
 /*
 iup.form.TextArea = function(oCfg)  {  
 	this._updateEl = function(el, val) {
@@ -537,494 +611,9 @@ iup.form.TextArea = function(oCfg)  {
 
 extend(iup.form.TextArea, iup.form.Field);
 
-iup.form.CheckboxField = function(oCfg)  {  
-	this._updateEl = function(el, val) {
-		if (val) {
-			el.checkbox.checked = "checked";
-		} else {
-			el.checkbox.checked = "";
-		}
-	};
-	this._buildEl = function() {
-		var em = this._eventManager;
-		var oThis = this;
-		
-		var ret = document.createElement("input");
-		ret.type = 'checkbox';
-		ret.className = "form-field";	
-		
-		if (oCfg.field) {
-			this._updateEl(oCfg.field.get());
-		}
-		
-		if (oCfg.readOnly) {
-			ret.disabled = "disabled";
-		}
-		
-		em.addHandler("changed", function(val, originalValue, bSilent) {
-			oThis.getField().set(val, bSilent);
-		});
-		
-		
-		ret.onchange = function() {
-			var val = ret.checked;
-			em.fireEvent("changed", val, oThis.getField().getOriginalValue(), true);
-		};
-		
-		var wrapper = document.createElement("div");
-		wrapper.appendChild(ret);
-		var text = document.createElement("span");
-		text.style.marginLeft = "10px";
-		text.innerHTML = oCfg.text || "";
-		wrapper.appendChild(text);
-		wrapper.checkbox = ret;
-		return wrapper;//ret; 
-	};
-	
-	iup.form.CheckboxField.superclass.constructor.call(this, oCfg);  
-	
-	this._getRawValue = function() {
-		return this.getEl().checkbox.checked == "checked";
-	};
-	
-	this.enable = function() {
-		this.getEl().checkbox.disabled = "";
-	};
-	
-	this.disable = function() {
-		this.getEl().checkbox.disabled = "disabled";
-	};
-};
-extend(iup.form.CheckboxField, iup.form.Field);
 
-iup.form.CheckboxField.prototype.updateEl = function(el, val) {
-	el.value = val;
-};
 
-iup.form.Combobox = function(oCfg) {
-	var oThis = this;
-	var valueField = oCfg.valueField;
-	var displayField = oCfg.displayField;
-	var store = oCfg.store;
-	var nullValue = oCfg.nullValue || '';
-	
-	var valueSelected = true;
-	
-	var input;
-	
-	var button;
-	
-	var list;
-	
-	this._updateEl = function(el, val) {
-//		val = val;// || '';
-		list.setValue(val);
-	},
-	
-	this._buildEl = function() {
-		var em = this._eventManager;
-		
-		var wrapper = document.createElement("div");
-		wrapper.style.position = 'relative'; 
-		
-		if (oCfg.width) {
-			wrapper.style.width = oCfg.width + "px";
-		}
-		
-		input = document.createElement("input");
-		input.name = oCfg.name;
-		input.className = "form-field";	
-		input.style.width = '100%';
-		input.style.paddingRight = '20px';
-		
-		button = document.createElement('div');
-		$(button).attr('tabindex', '-1');
-		button.className = 'combo-button';
-		
-		wrapper.appendChild(input);
-		wrapper.appendChild(button);
-		
-		list = new ComboboxList(input, button, store, em);
-		
-		button.onclick = function() {
-			list.filter('');
-			list.toggle();
-			$(input).focus();
-		};
-		
-		input.onchange = function() {
-			setTimeout(function(){
-				if (!valueSelected) {
-					var item = list.find(input.value);
-					if (item === null) {
-						input.value = nullValue;
-					} else {
-						input.value = item.label;  
-					}
-					fireChanged(item);
-				}
-			},1);
-		};
-		
-		var lastVal = '';
-		var lastModification = '';
-		var keyUp = true;
-		
-		input.onkeydown = function(evt){
-//			console.log(evt);
-			if (keyUp) {
-				lastVal = input.value;
-				keyUp = false;
-			}
-			
-			if (evt.keyCode === 38) {
-				var item = list.selectPrevious();
-				input.value =  item ? item.label : lastModification;
-				lastVal = input.value;
-				fireChanged(item);
-			} else if (evt.keyCode === 40) {
-				var item = list.selectNext();
-				input.value =  item ? item.label : lastModification;
-				lastVal = input.value;
-				fireChanged(item);
-			} else if (evt.keyCode === 13) {
-				list.hide();
-				lastModification = input.value;
-			}
-		};
-		
-		input.onkeyup = function(evt) {
-			keyUp = true;
-			var charKey = input.value !== lastVal;
-//			console.log(input.value + ' : ' + lastVal);
-			if (charKey) {
-				lastModification = input.value;
-				valueSelected = false;
 
-				setTimeout(function(){ 
-					list.filter(lastModification);
-					list.show();
-				},1);
-			}
-		};
-			
-		em.addHandler("changed", function(val, originalValue, bSilent) {
-//			console.log('changed %o to %o', originalValue, val);
-			oThis.getField().set(val, bSilent);
-			oThis.validate();
-		});
-		
-		if (oCfg.readOnly) {
-			input.disabled = "disabled";
-			button.style.display = 'none';
-		}
-		
-		list.setValue(oThis.getField().get());
-		
-		return wrapper;
-	};
-	
-	iup.form.Combobox.superclass.constructor.call(this, oCfg);  
-	
-	this._setValid = function(isValid) {
-		if (isValid) {
-			$(input).removeClass("invalid");
-		} else {
-			$(input).addClass("invalid");
-		}
-	};
-	
-	this.disable = function() {
-		input.disabled = "disabled";
-		button.style.display = 'none';
-	};
-	
-	this.enable = function() {
-		input.disabled = "";
-		button.style.display = 'block';
-	};
-	
-	function fireChanged(item) {
-		var val = item ? item.value : null;
-		var parsedVal = typeof oCfg.parser === 'function' ? oCfg.parser(val, oThis.getField().get()) : val;
-		oThis._eventManager.fireEvent("changed", parsedVal, oThis.getField().getOriginalValue(), true);
-	}
-	
-	function ComboboxList(input, button, store, em) {
-		var filterStr = '';
-		var data = [];
-		var itemIdx = -1;
-		var oThis = this;
-		var shown = false;
-		
-		var div = document.createElement('div');
-		lastList = div;
-		div.className = 'combo-list';
-		$(div).attr('tabindex', '-1');
-		
-		var ul = document.createElement('ul');
-		div.appendChild(ul);
-		
-		loadData();
-		store.on('load', loadData);
-		
-		document.getElementsByTagName('body')[0].appendChild(div);
-		div.style.maxHeight = '300px';
-		div.style.display = 'none';
-		
-		function loadData() {
-			$(ul).empty();
-			data.splice(0, data.length);
-			
-			if (!oCfg.required) {
-				var item = {
-					value : null,
-					label : nullValue
-				};
-				item.upper = item.label.toString().toUpperCase();
-		    	data.push(item);
-				
-				var li = document.createElement('li');
-				li.innerHTML = item.label || '&nbsp;';
-				li.record = item;
-				ul.appendChild(li);
-			}
-			
-			var records = store.getData();
-			for (var idx = 0; idx < records.length; idx++) {
-				var item = {
-					value 	: typeof valueField === 'function' ? valueField(records[idx]) : records[idx].get(valueField), 
-					label 	: typeof displayField === 'function' ? displayField(records[idx]) : records[idx].get(displayField),
-					visible : true
-				};
-
-				item.upper = item.label.toString().toUpperCase();
-		    	data.push(item);
-				
-				var li = document.createElement('li');
-				li.innerHTML = item.label;
-				li.record = item;
-				ul.appendChild(li);
-			}
-			if (filterStr) {
-				doFilter();
-			}
-		};
-		
-		function doFilter() {
-			var list = ul.children;
-			for (var idx = 0; idx < list.length; idx++) {
-				var li = list[idx];
-				var item = li.record;
-				var startsWith = item.upper.indexOf(filterStr) === 0;
-				if (item.visible !== startsWith) {
-					li.style.display = startsWith ? '' : 'none';
-					item.visible = startsWith;
-				}
-			}
-			select(-1);
-		}
-		
-		this.filter = function(str) {
-			filterStr = str.toUpperCase();
-			doFilter();
-		};
-		
-		this.find = function(str) {
-			var val = str.toUpperCase();
-			
-			for (var idx = 0; idx < data.length; idx ++) {
-				var item = data[idx];
-				if (item.upper === val) {
-					return item;
-				}
-			}
-			return null;
-		};
-		
-		this.selectNext = function() {
-			var list = ul.children;
-			var ret = null;
-			
-			if (!shown) {
-				oThis.filter('');
-				oThis.show();
-			} else {
-				var nextIdx = itemIdx;
-				
-				for (var idx = itemIdx + 1; idx < data.length; idx++) {
-					if (data[idx].visible) {
-						nextIdx = idx;
-						break;
-					}
-				}
-				
-				select(nextIdx);
-			}
-				
-			if (itemIdx > -1) {
-				ret = list[itemIdx].record;
-			}
-			
-			return ret;
-		};
-		
-		this.selectPrevious = function() {
-			var list = ul.children;
-			var ret = null;
-			
-			if (!shown) {
-				oThis.filter('');
-				oThis.show();
-			} else {
-				var prevIdx = itemIdx;
-				for (var idx = itemIdx - 1; idx > -1; idx--) {
-					if (data[idx].visible) {
-						prevIdx = idx;
-						break;
-					}
-				}
-				
-				select(prevIdx);
-			}
-			
-			if (itemIdx > -1) {
-				ret = list[itemIdx].record;
-			}
-			
-			return ret;
-		};
-		
-		this.setValue = function(val) {
-			var list = ul.children;
-			
-			var activeItemIdx = -1;
-			for (var idx = 0; idx < data.length; idx ++) {
-				var item = data[idx];
-				if (item.value === val) {
-					activeItemIdx = idx;
-					break;
-				}
-			}
-			
-			select(activeItemIdx);
-			
-			input.value = activeItemIdx > -1 ? data[activeItemIdx].label : nullValue;
-		};
-		
-		function select(idx) {
-//			console.log('select');
-			var list = ul.children;
-			
-			if (itemIdx > -1) {
-				$(list[itemIdx]).removeClass('grid-selected-row'); 
-			}
-			itemIdx = idx;
-			if (itemIdx > -1) {
-				$(list[itemIdx]).addClass('grid-selected-row');
-				var top = $(list[itemIdx]).position().top;
-				$(div).scrollTop(top - ($(div).height()/2));
-			} 
-		}
-		
-		this.show = function() {
-			if (!shown) {
-				div.style.zIndex = ++iup.zIndex;
-				
-				var offset = $(input).offset();
-				offset.top += $(input).outerHeight();
-				$(div).css({
-				    top: offset.top,
-				    left: offset.left
-				});
-				
-				var inputWidth = $(input).outerWidth();
-				ul.style.minWidth = (inputWidth - 22) + 'px';
-				div.style.minWidth = inputWidth + 'px';
-				div.style.display = 'block';
-				shown = true;
-				
-				if (itemIdx > -1) {
-					select(-1);
-				}
-				
-				var upper = input.value.toUpperCase();
-				for (var idx = 0; idx < data.length; idx ++) {
-					var item = data[idx];
-					if (item.upper === upper) {
-						select(idx);
-						break;
-					}
-				}
-			}
-		};
-		
-		this.hide = function() {
-			div.style.display = 'none';
-			shown = false;
-		};
-		
-		this.toggle = function() {
-			if (shown) {
-				this.hide();
-			} else {
-				this.show();
-			}
-		}
-		
-		$(div).on('click', function(evt) {
-			if (evt.target.nodeName === 'LI') {
-				var li = evt.target;
-				fireChanged(li.record);
-//				em.fireEvent("changed", oCfg.parser(li.record.value, parent.getField().get()), parent.getField().getOriginalValue(), true);
-				input.value = li.record.label;
-				oThis.hide();
-				valueSelected = true;
-			}
-		});
-		
-		this.getEl = function() {
-			return div;
-		};
-		
-//		var inputFocused = false;
-//		var listFocused = false;
-		
-		var focusLost = true;
-		
-		input.onblur = function(evt) {
-			focusLost = true;
-			setTimeout(function() {
-				if (focusLost) {
-					oThis.hide();
-				}
-			}, 1);
-		};
-		
-		$(div).on('focus', function(evt) {
-			focusLost = false;
-		});
-		
-		$(div).on('blur', function(evt) {
-			focusLost = true;
-			setTimeout(function() {
-				if (focusLost) {
-					oThis.hide();
-				}
-			}, 1);
-		});
-		
-		$(input).on('focus', function(evt) {
-			focusLost = false;
-		});
-		
-		$(button).on('focus', function(evt) {
-			focusLost = false;
-		});
-	}
-};
-
-extend(iup.form.Combobox, iup.form.Field);
 
 iup.form.ButtonField = function(oCfg) {
 	var cfg = {
@@ -1125,104 +714,6 @@ iup.form.ButtonField = function(oCfg) {
 };
 
 extend(iup.form.ButtonField, iup.form.Field);
-
-//iup.form.Combobox = function(oCfg) {
-//	var valueField = oCfg.valueField;
-//	var displayField = oCfg.displayField;
-//	var store = oCfg.store;
-//	var nullValue = oCfg.nullValue;
-//	
-//	var renderer = oCfg.renderer;
-//	oCfg.renderer = function(val) {
-//		return (typeof val == "undefined") 
-//				? "" 
-//				: (typeof renderer == "function" ? renderer(val) : val);
-//	}; 
-//	var parser = oCfg.parser;
-//	oCfg.parser = function(val, field) {
-//		return (val == "" )
-//				? undefined 
-//				: (typeof parser == "function" ? parser(val, field) : val);
-//	};
-//	
-//	this._updateEl = function(el, val) {
-//		if ( typeof val == "udefined" || val == null) {
-//			el.value = "";	
-//		} else {
-//			var data = store.getData();
-//			var found = false;
-//			for (var idx in data) {
-//				if (data[idx].get(valueField) === val) {
-//					found = true;
-//					break;
-//				}
-//			}
-//			if (found) {
-//				el.value = val;
-//			} else {
-//				el.value = "";
-//			}
-//		}
-//	},
-//	
-//	this._buildEl = function() {
-//		var em = this._eventManager;
-//		var oThis = this;
-//		
-//		var input = document.createElement("select");
-//		input.name = oCfg.name;
-//		input.className = "form-field";	
-//		input.style.width = oCfg.width ? oCfg.width + "px" : '100%';
-//		
-//		if (oCfg.readOnly) {
-//			input.disabled = "disabled";
-//		}
-//		
-//		var option = document.createElement("option");
-//		option.value = "";
-//		option.innerHTML = nullValue || "&nbsp;";
-//		if (oCfg.required && !nullValue) {
-//			option.style.display = "none";
-//		}
-//		
-//		input.appendChild(option);
-//		input.value = "";
-//		
-//		var aRecords = store.getData();
-//		appendOptions(input, aRecords);
-//		em.addHandler("changed", function(val, originalValue, bSilent) {
-//			oThis.getField().set(val, bSilent);
-//		});
-//		
-//		input.onchange = function() {
-//			em.fireEvent("changed", oCfg.parser(input.value, oThis.getField().get()), oThis.getField().getOriginalValue(), true);
-//		};
-//		
-//		oCfg.store.on ("load", function(aData) {
-//			appendOptions(input, aData);
-//		});
-//		
-//		return input;
-//	};
-//	
-//	function appendOptions(select, aRecords) {
-//		for(var idx in aRecords) {
-//			var record = aRecords[idx];
-//			
-//			var option = document.createElement("option");
-//			var val = typeof valueField == "function" ? valueField(record) : record.get(valueField);
-//			option.value = val;
-//			var text = typeof displayField == "function" ? displayField(record) : record.get(displayField);
-//			option.innerHTML = text;
-//			
-//			select.appendChild(option);
-//		}
-//	}
-//	
-//	iup.form.Combobox.superclass.constructor.call(this, oCfg);  
-//};
-
-
 
 iup.form.SelectMany = function(oCfg) {
 	var store = oCfg.store;
@@ -1361,174 +852,6 @@ iup.form.SelectMany = function(oCfg) {
 
 extend(iup.form.SelectMany, iup.form.Field);
 
-iup.form.FieldSet = function(oCfg) {
-	var cfg = {
-		fields 		: oCfg.fields, 	
-		labelWidth 	: oCfg.labelWidth,
-		fieldWidth	: oCfg.fieldWidth,
-		rowSpace	: oCfg.rowSpace || 5
-		
-	};
-	var self = this;
-	
-	var record = null;
-	
-	this.fields = [];
-	
-	this._buildEl = function() {
-		var table = document.createElement("table");
-		if (!cfg.fieldWidth) {
-			table.style.width = '100%';
-		}
-		table.className = "form";
-		var tbody = document.createElement("tbody");
-		table.appendChild(tbody);
-		var tr = document.createElement("tr");
-		tbody.appendChild(tr);
-		
-		$.each(cfg.fields, function(idx, fieldSet) {
-			var td = document.createElement("td");
-			td.style.width = 100/cfg.fields.length + '%';
-			td.style.verticalAlign = "top";
-			tr.appendChild(td);
-			var fieldSetTable = document.createElement("table");
-			fieldSetTable.style.width = '100%';
-			fieldSetTable.className = "field-set";
-			td.appendChild(fieldSetTable);
-			var fieldSetTbody = document.createElement("tbody");
-			fieldSetTable.appendChild(fieldSetTbody);
-			
-			$.each(fieldSet, function(idx, field) {
-				field.width = field.width || cfg.fieldWidth;
-				var oField;
-				if (field instanceof iup.form.Field) {
-					oField = field;
-				} else {
-					if (field.type == "number") {
-						oField = new iup.form.NumberField(field);
-					} else if (field.type == "date") {
-						oField = new iup.form.DateField(field);
-					} else if (field.type == "checkbox") {
-						oField = new iup.form.CheckboxField(field);
-					} else if (field.type == "combobox") {
-						oField = new iup.form.Combobox(field);
-					} else if (field.type == "textarea") {
-						oField = new iup.form.TextArea(field);
-					} else if (field.type == "spinbox") {
-						oField = new iup.form.Spinbox(field);
-					} else {
-						oField = new iup.form.Field(field);
-					}
-				}
-				
-				var fieldSetTr = document.createElement("tr");
-				fieldSetTr.className = "form-row";
-				var labelTd = document.createElement("td");
-				fieldSetTr.appendChild(labelTd);
-				labelTd.style.width = cfg.labelWidth + "px";
-				if (oField.getLabel()) {
-					labelTd.innerHTML = (oField.isRequired() ? "*" : "") + oField.getLabel();
-					labelTd.className = "form-label";
-				}
-				
-				var fieldTd = document.createElement("td");
-				fieldSetTr.appendChild(fieldTd);
-			//	fieldTd.style.width = cfg.fieldWidth + "px";
-				fieldTd.style.textAlign = "left";
-				fieldTd.appendChild(oField.getEl());
-				
-				if (idx > 0) {
-					labelTd.style.paddingTop = cfg.rowSpace + "px";
-					fieldTd.style.paddingTop = cfg.rowSpace + "px";
-				}
-				
-				self.fields.push(oField);
-				fieldSetTbody.appendChild(fieldSetTr);
-			});
-		});
-		return table;
-	};
-	
-	iup.form.FieldSet.superclass.constructor.call(this, oCfg);  
-	
-	this.doLayout = function(width, height) {
-		// skip for now
-//		var el = this.getEl();
-//		el.style.width = width + 'px';
-//		el.style.height = height + 'px';
-		
-//		var fieldWidth = width / cfg.fields.length - cfg.labelWidth;
-//		for (var idx in this.fields) {
-//			var field = this.fields[idx];
-//			field.setWidth(fieldWidth);
-//		}
-	};
-	
-	this.loadRecord = function(rec) {
-		for (var idx in this.fields) {
-			var field = this.fields[idx];
-			field.setField(rec.getField(field.getName()));
-		}
-		this.clearInvalid();
-		record = rec;
-	};
-	
-	this.enable = function() {
-		for (var idx in this.fields) {
-			if (!this.fields[idx].isReadOnly()) {
-				this.fields[idx].enable();
-			}
-		}
-	};
-	
-	this.clearInvalid = function() {
-		for (var idx in this.fields) {
-			this.fields[idx].clearInvalid();
-		}
-	};
-	
-	this.disable = function() {
-		for (var idx in this.fields) {
-			this.fields[idx].disable();
-		}
-	};
-	
-	this.getRecord = function() {
-		if (record === null) {
-			record = new iup.data.Record(this.getValues());
-		}
-		return record;
-	};
-	
-	this.getValues = function() {
-		var ret = {};
-		for (var idx in this.fields) {
-			var field = this.fields[idx];
-			ret[field.getName()] = field.getField().get();
-		}
-		return ret;
-	};
-	
-	this.validate = function() {
-		var ret = true;
-		for (var idx in this.fields) {
-			var field = this.fields[idx];
-			ret &= field.validate();
-		}
-		return ret;
-		
-	};
-	
-	this.reset = function() {
-		for (var idx in this.fields) {
-			var field = this.fields[idx];
-			field.setValue(field.getField().getOriginalValue());
-		}
-	};
-};
-
-extend(iup.form.FieldSet, iup.layout.Panel);
-
 iup.form.ComplexForm = function(oCfg) {
 	var cfg = {
 		fields 		: oCfg.fields, 	
@@ -1636,14 +959,12 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 		rowSpace	: 5,
 		columns 	: 1
 	},
-	/*var self = this;
-	
-	var record = null;
-	
-	this.fields = [];*/
+
 	prototype : {
 		_buildEl : function(cfg) {
 			this.fields = [];
+			
+			
 			
 			var rows = Math.ceil(cfg.fields.length / cfg.columns);
 			
@@ -1670,19 +991,16 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 						if (fieldCfg instanceof iup.form.Field) {
 							oField = fieldCfg;
 						} else {
-							if (fieldCfg.type == "number") {
-								oField = new iup.form.NumberField(fieldCfg);
-							/*} else if (field.type == "date") {
-								oField = new iup.form.DateField(fieldCfg);
-							} else if (field.type == "checkbox") {
-								oField = new iup.form.CheckboxField(fieldCfg);
-							} else if (field.type == "combobox") {
-								oField = new iup.form.Combobox(fieldCfg);
-							} else if (field.type == "textarea") {
-								oField = new iup.form.TextArea(fieldCfg);*/
-							} else if (fieldCfg.type == "spinbox") {
-								oField = new iup.form.Spinbox(fieldCfg);
-							} else {
+							if (fieldCfg.type) {
+								for (var key in iup.form) {
+									var construct = iup.form[key];
+									if (construct.type === fieldCfg.type) {
+										oField = new construct(fieldCfg);
+									}
+								}
+								
+							}
+							if (!oField) {
 								oField = new iup.form.Field(fieldCfg);
 							}
 						}
@@ -1711,97 +1029,12 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 					this.fields.push(oField);
 				}
 			}
-			
-			/*var table = document.createElement("table");
-			if (!cfg.fieldWidth) {
-				table.style.width = '100%';
-			}
-			table.className = "form";
-			var tbody = document.createElement("tbody");
-			table.appendChild(tbody);
-			var tr = document.createElement("tr");
-			tbody.appendChild(tr);
-			
-			$.each(cfg.fields, function(idx, fieldSet) {
-				var td = document.createElement("td");
-				td.style.width = 100/cfg.fields.length + '%';
-				td.style.verticalAlign = "top";
-				tr.appendChild(td);
-				var fieldSetTable = document.createElement("table");
-				fieldSetTable.style.width = '100%';
-				fieldSetTable.className = "field-set";
-				td.appendChild(fieldSetTable);
-				var fieldSetTbody = document.createElement("tbody");
-				fieldSetTable.appendChild(fieldSetTbody);
-				
-				$.each(fieldSet, function(idx, field) {
-					field.width = field.width || cfg.fieldWidth;
-					var oField;
-					if (field instanceof iup.form.Field) {
-						oField = field;
-					} else {
-						if (field.type == "number") {
-							oField = new iup.form.NumberField(field);
-						} else if (field.type == "date") {
-							oField = new iup.form.DateField(field);
-						} else if (field.type == "checkbox") {
-							oField = new iup.form.CheckboxField(field);
-						} else if (field.type == "combobox") {
-							oField = new iup.form.Combobox(field);
-						} else if (field.type == "textarea") {
-							oField = new iup.form.TextArea(field);
-						} else if (field.type == "spinbox") {
-							oField = new iup.form.Spinbox(field);
-						} else {
-							oField = new iup.form.Field(field);
-						}
-					}
-					
-					var fieldSetTr = document.createElement("tr");
-					fieldSetTr.className = "form-row";
-					var labelTd = document.createElement("td");
-					fieldSetTr.appendChild(labelTd);
-					labelTd.style.width = cfg.labelWidth + "px";
-					if (oField.getLabel()) {
-						labelTd.innerHTML = (oField.isRequired() ? "*" : "") + oField.getLabel();
-						labelTd.className = "form-label";
-					}
-					
-					var fieldTd = document.createElement("td");
-					fieldSetTr.appendChild(fieldTd);
-				//	fieldTd.style.width = cfg.fieldWidth + "px";
-					fieldTd.style.textAlign = "left";
-					fieldTd.appendChild(oField.getEl());
-					
-					if (idx > 0) {
-						labelTd.style.paddingTop = cfg.rowSpace + "px";
-						fieldTd.style.paddingTop = cfg.rowSpace + "px";
-					}
-					
-					self.fields.push(oField);
-					fieldSetTbody.appendChild(fieldSetTr);
-				});
-			});*/
+						
 			this._el = table;
-			return table;
 		},
 		doLayout : function(width, height) {
 			//skip for now
 		},
-	
-	/*this.doLayout = function(width, height) {
-		// skip for now
-//		var el = this.getEl();
-//		el.style.width = width + 'px';
-//		el.style.height = height + 'px';
-		
-//		var fieldWidth = width / cfg.fields.length - cfg.labelWidth;
-//		for (var idx in this.fields) {
-//			var field = this.fields[idx];
-//			field.setWidth(fieldWidth);
-//		}
-	};*/
-	
 		loadRecord : function(rec) {
 			for (var idx in this.fields) {
 				var field = this.fields[idx];

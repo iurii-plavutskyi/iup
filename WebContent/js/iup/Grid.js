@@ -21,8 +21,8 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 					self.events.fireEvent('rowClick', row, row.record);
 					
 					var selectedRows = self._selectedRows;
-					if (cfg.selectionModel != constants.SELECTION_NONE && row.record) {
-						if (cfg.selectionModel == constants.SELECTION_SINGLE) {
+					if (cfg.selectionModel != statics.SELECTION_NONE && row.record) {
+						if (cfg.selectionModel == statics.SELECTION_SINGLE) {
 							$.each(selectedRows, function(idx, selection){
 								$(selection).removeClass("grid-selected-row");
 							});
@@ -31,7 +31,7 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 							selectedRows.push(row);
 						}
 						
-						if (cfg.selectionModel == constants.SELECTION_MULTI) {
+						if (cfg.selectionModel == statics.SELECTION_MULTI) {
 							if (event.ctrlKey) {
 								if($(row).hasClass("grid-selected-row")) {
 									selectedRows.splice(selectedRows.indexOf(row), 1);
@@ -317,7 +317,7 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 			lastResizableColumn.calculatedWidth = width - fixedWidth - allocatedWidth + lastResizableColumn.calculatedWidth;
 		}
 
-		var constants = {
+		var statics = {
 			SELECTION_NONE : "none",
 			SELECTION_SINGLE : "single",
 			SELECTION_MULTI : "multi"
@@ -328,7 +328,7 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 			fixedColumns			: undefined,					// disables column resizing and reordering 
 			handlers				: {},							// event handlers: sort(column, "asc/desc"); cellClick(td, column, record) rowClick(tr, record) headerClick(th, column) cellDblClick(td, column, record) rowDblClick(tr, record)
 			emptyText				: undefined,					// text to display in case there's no data
-			selectionModel			: constants.SELECTION_NONE,		// "none", "single", "multi"
+			selectionModel			: statics.SELECTION_NONE,		// "none", "single", "multi"
 			defaultColumnWidth		: 100,							// if you don't specify width for column -> it will be set to 100
 			scrollWidth				: 10,							// space left for scroll
 			resizeColumnAreaWidth	: 3,							// width of the area(that allows column resizing) on the left and right side of the column header 
@@ -341,13 +341,11 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 			_buildEl : function(cfg) {
 				this._headerColGroup = buildColGroup();
 				
-				this._header = iup.utils.createEl({
-					tag:"thead", 
+				this._header = iup.utils.createEl("thead", {
 					style : {cursor : "default"}
 				});
 				
-				var headerTable = iup.utils.createEl({
-					tag : "table", 
+				var headerTable = iup.utils.createEl("table", {
 					style : {
 						position : "relative", 
 						tableLayout : 'fixed'
@@ -355,20 +353,16 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 					content : [this._headerColGroup, this._header]
 				});
 				
-				var headerDiv = iup.utils.createEl({
-					tag:"div", 
+				var headerDiv = iup.utils.createEl("div", {
 					className : 'grid-header-panel', 
 					content:headerTable
 				});
 				
 				this._bodyColGroup = buildColGroup();
 				
-				this._body = iup.utils.createEl({ 
-					tag : "tbody"		
-				});
+				this._body = iup.utils.createEl("tbody");
 				
-				var bodyTable = iup.utils.createEl({ 
-					tag : "table", 
+				var bodyTable = iup.utils.createEl("table", { 
 					style : {tableLayout : 'fixed'},
 					content : [this._bodyColGroup, this._body]
 				});
@@ -378,8 +372,7 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 					items : [bodyTable]
 				});
 				
-				var container = iup.utils.createEl({
-					tag : "div", 
+				var container = iup.utils.createEl("div", {
 					className : "grid",
 					content : [headerDiv, this._bodyWraper.getEl()]
 				});
@@ -401,8 +394,7 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 					return colGroup;
 				}
 				
-				var wrapper = iup.utils.createEl({
-					tag : "div", 
+				var wrapper = iup.utils.createEl("div", {
 					style : {
 						position : "relative"
 					},
@@ -442,7 +434,7 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 		};
 		
 		return {
-			constants : constants, 
+			statics : statics, 
 			defaults : defaults,
 			prototype : prototype,
 			events : events,

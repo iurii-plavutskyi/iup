@@ -33,7 +33,7 @@ iup.utils.merge = function (defaults, config) {
 iup.utils.createComponent = function(name, parent, oCfg) {
 	
 	var cfg = {
-		constants 	: oCfg.constants || {},
+		statics 	: oCfg.statics || {},
 		defaults	: oCfg.defaults || {},
 		prototype 	: oCfg.prototype || {},
 		construct 	: oCfg.construct,
@@ -73,8 +73,8 @@ iup.utils.createComponent = function(name, parent, oCfg) {
 			}
 		};
 	}
-	for (var key in cfg.constants) {
-		type[key] = cfg.constants[key];
+	for (var key in cfg.statics) {
+		type[key] = cfg.statics[key];
 	}
 	
 	if (parent) {
@@ -228,9 +228,10 @@ iup.utils.Execution = function () {
 	};
 };
 
-iup.utils.createEl = function(oCfg) {
+iup.utils.createEl = function(tag, oCfg) {
+	var oCfg = oCfg || {};
 	var cfg = {
-		tag : oCfg.tag,
+		tag : tag,
 		style : oCfg.style || {},
 		attributes : oCfg.attributes || {},
 		className : oCfg.className,
