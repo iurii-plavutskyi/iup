@@ -469,22 +469,50 @@ iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel, function (
 	 		},
 	 		mouseMove	: function (e) {
 				var delta = { 
-					x : prevDragPosition.x - e.pageX, 
-					y : prevDragPosition.y - e.pageY
+					x : e.pageX - prevDragPosition.x, 
+					y : e.pageY - prevDragPosition.y
 				};
+				
+				var maxDeltaX = cfg.width - cfg.layoutConfig.left - cfg.layoutConfig.right - splitter(statics.SPLITTER_LEFT, cfg) - splitter(statics.SPLITTER_RIGHT, cfg);
+				var maxDeltaY = cfg.height - cfg.layoutConfig.top - cfg.layoutConfig.bottom - splitter(statics.SPLITTER_TOP, cfg) - splitter(statics.SPLITTER_BOTTOM, cfg);
 				
 				switch (currentElement.position) {
 					case statics.SPLITTER_TOP : 
-						cfg.layoutConfig.top = -delta.y + cfg.layoutConfig.top;
+						if (cfg.layoutConfig.top < -delta.y) {
+							delta.y = -cfg.layoutConfig.top;
+						}
+						if (delta.y > maxDeltaY) {
+							delta.y = maxDeltaY;
+						}
+						cfg.layoutConfig.top += delta.y;
 						break;
 					case statics.SPLITTER_BOTTOM : 
-						cfg.layoutConfig.bottom = delta.y + cfg.layoutConfig.bottom; 
+						if (cfg.layoutConfig.bottom < delta.y) {
+							delta.y = cfg.layoutConfig.bottom;
+						}
+						if (-delta.y > maxDeltaY) {
+							delta.y = -maxDeltaY;
+						}
+						cfg.layoutConfig.bottom -= delta.y; 
 						break;
 					case statics.SPLITTER_LEFT : 
-						cfg.layoutConfig.left = -delta.x + cfg.layoutConfig.left; 
+						if (cfg.layoutConfig.left < -delta.x) {
+							delta.x = -cfg.layoutConfig.left;
+						} 
+						if (delta.x > maxDeltaX) {
+							delta.x = maxDeltaX;
+						}
+						cfg.layoutConfig.left += delta.x; 
 						break;
 					case statics.SPLITTER_RIGHT : 
-						cfg.layoutConfig.right = delta.x + cfg.layoutConfig.right; 
+						if (cfg.layoutConfig.right < delta.x) {
+							delta.x = cfg.layoutConfig.right;
+						}
+						if (-delta.x > maxDeltaX) {
+							delta.x = -maxDeltaX;
+						}
+						
+						cfg.layoutConfig.right -= delta.x; 
 						break;
 				}
 				updates++;
@@ -492,26 +520,9 @@ iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel, function (
 					panel.applyLayoutConfig();
 				})
 				
-				prevDragPosition = {x : e.pageX, y : e.pageY};
-				/*
-				if (currentElement.position === statics.SPLITTER_TOP) {
-					var total = self.scrollData.bodyHeight-self.scrollData.vScrollerSize;
-					var scale = (self.scrollData.contentHeight - self.scrollData.bodyHeight)/total;
-					var scrollAmount = - scale * delta;
-					var scrolled = scroll.call(self,0, scrollAmount).y / scale;
-
-					prevDragPosition.y += Math.round(scrolled);
-				}
-				
-				if (axis === 'X') {
-					var delta = prevDragPosition.x - e.pageX;
-					var total = self.scrollData.bodyWidth-self.scrollData.hScrollerSize;
-					var scale = (self.scrollData.contentWidth - self.scrollData.bodyWidth)/total;
-					var scrollAmount = - scale * delta;
-					var scrolled = scroll.call(self, - scale * delta, 0).x / scale;
-					prevDragPosition.x += Math.round(scrolled);
-				}
-				*/
+				prevDragPosition.x += delta.x;
+				prevDragPosition.y += delta.y;
+				//= {x : e.pageX, y : e.pageY};
 			},
 			mouseDown	: function(e, element) {
 				updates = 0;
@@ -555,7 +566,6 @@ iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel, function (
 						top : '0px',
 						left : '0px',
 						right : '0px',
-					//	height : cfg.layoutConfig.top + 'px'
 					},
 					content : getPanelEl(cfg.top)
 				});
@@ -565,7 +575,6 @@ iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel, function (
 						position : 'absolute',
 						top : '0px',
 						left : '0px',
-					//	width : cfg.layoutConfig.left + 'px',
 						bottom : '0px'
 					},
 					content : getPanelEl(cfg.left)
@@ -593,8 +602,6 @@ iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel, function (
 					style : {
 						position : 'absolute',
 						top : '0px',
-					//	left : cfg.layoutConfig.left + splitter(statics.SPLITTER_LEFT, cfg) + 'px',
-					//	right : cfg.layoutConfig.right + splitter(statics.SPLITTER_RIGHT, cfg) + 'px',
 						bottom : '0px'
 					},
 					content : [leftSplitter, getPanelEl(cfg.center), rightSplitter]
@@ -604,7 +611,6 @@ iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel, function (
 					style : {
 						position : 'absolute',
 						top : '0px',
-					//	width : cfg.layoutConfig.right + 'px',
 						right : '0px',
 						bottom : '0px'
 					},
@@ -614,7 +620,6 @@ iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel, function (
 				var bottom = iup.utils.createEl("div", {
 					style : {
 						position : 'absolute',
-					//	height : cfg.layoutConfig.bottom + 'px',
 						left : '0px',
 						right : '0px',
 						bottom : '0px'
@@ -643,10 +648,8 @@ iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel, function (
 				var mid = iup.utils.createEl("div", {
 					style : {
 						position : 'absolute',
-						//top : cfg.layoutConfig.top + splitter(statics.SPLITTER_TOP, cfg) + 'px',
 						left : '0px',
 						right : '0px',
-						//bottom : cfg.layoutConfig.bottom + splitter(statics.SPLITTER_BOTTOM, cfg) + 'px'
 					},
 					content : [topSplitter, left, center, right, bottomSplitter]
 				});

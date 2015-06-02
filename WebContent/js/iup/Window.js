@@ -24,8 +24,8 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 			div.style.position = 'absolute';
 			div.style.border = borderWidth + 'px solid #ccc';
 			div.style.width = $(table).outerWidth() - 2*borderWidth + 'px';
-			div.style.height =  $(table).outerHeight() - 2*borderWidth + 'px';
-			$(div).offset($(table).offset());
+			div.style.height = $(table).outerHeight() - 2*borderWidth + 'px';
+			$(div).offset( $(table).offset() );
 			div.style.borderRadius = '5px';
 			div.style.zIndex = iup.popup.zIndex++;
 			document.getElementsByTagName('body')[0].appendChild(div);
@@ -42,6 +42,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 			        	win.move(resize.hMove ? -resize.dX : 0, resize.vMove ? -resize.dY : 0);
 			        }
 	 			}
+				document.getElementsByTagName('body')[0].style.cursor = '';
 	 		},
 	 		
 	 		mouseMove	: function (e) {
@@ -72,6 +73,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 	       		if (cfg.resizeModel === 'border') {
 	       			resizeDiv = createResizeDiv();
 	       		}
+				document.getElementsByTagName('body')[0].style.cursor = currentElement.style.cursor;
 		        return true;
 	 		}
 	 	});
@@ -90,8 +92,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 	   		var hMove = false;
  			var vMove = false;
  			
- 			
-	        var dX = end.x - start.x;
+ 			var dX = end.x - start.x;
 	       
 	        if (currentElement.hResize) {
 	        	if (currentElement.hResize === "e") {
@@ -362,11 +363,15 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 				if ( !cfg.height) {
 					cfg.height = Math.max(cfg.minHeight, $(win.getEl()).height() + 2 * cfg.resizeBorder);
 				}
-				win.doLayout(cfg.width - 2 * cfg.resizeBorder, cfg.height - 2 * cfg.resizeBorder);
 				
-				this._state.table.style.top = "50px";
 				var left = ($(window).innerWidth() - cfg.width)/2 ;
-				$(this._state.table).css('left', left + "px");
+				var el = this._state.table;
+				el.style.top = "50px";
+				el.style.left = left + "px";
+				el.style.width = cfg.width + 'px';
+				el.style.height = cfg.height + 'px';
+				var styleEl = this._state.tdMid;
+				win.doLayout($(styleEl).innerWidth(), $(styleEl).innerHeight());
 			},
 			restore : function() {
 				if (this.cfg.modal) {
@@ -377,87 +382,149 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 				
 			},
 			_buildEl : function(cfg) {
-				var table = document.createElement('table');
-				table.style.display = "none";
-				table.style.position = 'absolute';
-				table.style.backgroundColor = '#fff';
-				table.style.border = '1px solid #369';
-				table.style.borderRadius = '5px';
+				var topLeft = iup.utils.createEl('div', {
+					style : {
+						position : 'absolute',
+						top : '0px',
+						left : '0px',
+						height : defaults.resizeBorder + 'px',
+						width  : defaults.resizeBorder + 'px'
+					}
+				});
 				
-				var tbody = document.createElement('tbody');
-				table.appendChild(tbody);
-				var trTop = document.createElement('tr');
-				trTop.style.height = cfg.resizeBorder + 'px';
-				tbody.appendChild(trTop);
-				var trMid = document.createElement('tr');
-				tbody.appendChild(trMid);
-				var trBot = document.createElement('tr');
-				trBot.style.height = cfg.resizeBorder + 'px';
-				tbody.appendChild(trBot);
+				var topMid = iup.utils.createEl('div', {
+					style : {
+						position : 'absolute',
+						top : '0px',
+						left : defaults.resizeBorder + 'px',
+						right : defaults.resizeBorder + 'px',
+						height : defaults.resizeBorder + 'px'
+					}
+				});
+				var topRight = iup.utils.createEl('div', {
+					style : {
+						position : 'absolute',
+						top : '0px',
+						right : '0px',
+						height : defaults.resizeBorder + 'px',
+						width  : defaults.resizeBorder + 'px'
+					}
+				});
 				
-				var tdTopLeft = document.createElement('td');
-				tdTopLeft.style.width = cfg.resizeBorder + 'px';
-				tdTopLeft.hResize = "e";
-				tdTopLeft.vResize = "n";
-				trTop.appendChild(tdTopLeft);
+				var left = iup.utils.createEl('div', {
+					style : {
+						position : 'absolute',
+						top : defaults.resizeBorder + 'px',
+						left : '0px',
+						width : defaults.resizeBorder + 'px',
+						bottom : defaults.resizeBorder + 'px'
+					}
+				});
 				
-				var tdTopMid = document.createElement('td');
-				tdTopMid.vResize = "n";
-				trTop.appendChild(tdTopMid);
+				var mid = iup.utils.createEl('div', {
+					style : {
+						position : 'absolute',
+						top : defaults.resizeBorder + 'px',
+						left : defaults.resizeBorder + 'px',
+						right : defaults.resizeBorder + 'px',
+						bottom : defaults.resizeBorder + 'px'
+					}
+				});
 				
-				var tdTopRight = document.createElement('td');
-				tdTopRight.style.width = cfg.resizeBorder + 'px';
-				tdTopRight.hResize = "w";
-				tdTopRight.vResize = "n";
-				trTop.appendChild(tdTopRight);
+				var right = iup.utils.createEl('div', {
+					style : {
+						position : 'absolute',
+						top : defaults.resizeBorder + 'px',
+						right : '0px',
+						width : defaults.resizeBorder + 'px',
+						bottom : defaults.resizeBorder + 'px'
+					}
+				});
 				
-				var tdMidLeft = document.createElement('td');
-				tdMidLeft.hResize = "e";
-				trMid.appendChild(tdMidLeft);
-				var tdMid = document.createElement('td');
-				tdMid.style.overflow = 'hidden';
-				trMid.appendChild(tdMid);
-				var tdMidRight = document.createElement('td');
-				tdMidRight.hResize = "w";
-				trMid.appendChild(tdMidRight);
+				var botLeft = iup.utils.createEl('div', {
+					style : {
+						position : 'absolute',
+						bottom : '0px',
+						left : '0px',
+						height : defaults.resizeBorder + 'px',
+						width  : defaults.resizeBorder + 'px'
+					}
+				});
 				
-				var tdBotLeft = document.createElement('td');
-				tdBotLeft.hResize = "e";
-				tdBotLeft.vResize = "s";
-				trBot.appendChild(tdBotLeft);
-				var tdBotMid = document.createElement('td');
-				tdBotMid.vResize = "s";
-				trBot.appendChild(tdBotMid);
-				var tdBotRight = document.createElement('td');
-				tdBotRight.hResize = "w";
-				tdBotRight.vResize = "s";
-				trBot.appendChild(tdBotRight);
+				var botMid = iup.utils.createEl('div', {
+					style : {
+						position : 'absolute',
+						bottom : '0px',
+						left : defaults.resizeBorder + 'px',
+						right : defaults.resizeBorder + 'px',
+						height : defaults.resizeBorder + 'px'
+					}
+				});
+				var botRight = iup.utils.createEl('div', {
+					style : {
+						position : 'absolute',
+						bottom : '0px',
+						right : '0px',
+						height : defaults.resizeBorder + 'px',
+						width  : defaults.resizeBorder + 'px'
+					}
+				});
+				
+				var styleEl = iup.utils.createEl('div', {
+					className : 'stretch',
+					style : {
+						backgroundColor : '#fff',
+						border 			: '1px solid #369',
+						borderRadius 	: '5px'
+					},
+					content : [topLeft, topMid, topRight, left, mid, right, botLeft, botMid, botRight]
+				});
+				
+				var el = iup.utils.createEl('div', {
+					style : {
+						display 		: "none",
+						position 		: 'absolute',
+					},
+					content : styleEl
+				});
+				
+				this._state.table = el;//table;
+				this._state.tdMid = mid;//tdMid;
 				
 				if (cfg.resizeModel !== 'none') {
-					tdTopLeft.style.cursor = 'nwse-resize';
-					tdTopMid.style.cursor = 'ns-resize';
-					tdTopRight.style.cursor = 'nesw-resize';
-					tdMidLeft.style.cursor = 'ew-resize';
-					tdMidRight.style.cursor = 'ew-resize';
-					tdBotLeft.style.cursor = 'nesw-resize';
-					tdBotMid.style.cursor = 'ns-resize';
-					tdBotRight.style.cursor = 'nwse-resize';
-				}
-				
-				this._state.table = table;
-				this._state.tdMid = tdMid;
-				
-				if (cfg.resizeModel !== 'none') {
+					topLeft.style.cursor = 'nwse-resize';
+					topMid.style.cursor = 'ns-resize';
+					topRight.style.cursor = 'nesw-resize';
+					left.style.cursor = 'ew-resize';
+					right.style.cursor = 'ew-resize';
+					botLeft.style.cursor = 'nesw-resize';
+					botMid.style.cursor = 'ns-resize';
+					botRight.style.cursor = 'nwse-resize';
+					
+					topLeft.hResize = "e";
+					topLeft.vResize = "n";
+					topMid.vResize = "n";
+					topRight.hResize = "w";
+					topRight.vResize = "n";
+					left.hResize = "e";
+					right.hResize = "w";
+					botLeft.hResize = "e";
+					botLeft.vResize = "s";
+					botMid.vResize = "s";
+					botRight.hResize = "w";
+					botRight.vResize = "s";
+					
 					var windowResizeManager = new WindowResizeManager(this);
-					windowResizeManager.makeDraggable(tdTopLeft);
-					windowResizeManager.makeDraggable(tdTopRight);
-					windowResizeManager.makeDraggable(tdTopMid);
-					windowResizeManager.makeDraggable(tdMidLeft);
-					windowResizeManager.makeDraggable(tdMidRight);
-					windowResizeManager.makeDraggable(tdBotLeft);
-					windowResizeManager.makeDraggable(tdBotMid);
-					windowResizeManager.makeDraggable(tdBotRight);
+					windowResizeManager.makeDraggable(topLeft);
+					windowResizeManager.makeDraggable(topMid);
+					windowResizeManager.makeDraggable(topRight);
+					windowResizeManager.makeDraggable(left);
+					windowResizeManager.makeDraggable(right);
+					windowResizeManager.makeDraggable(botLeft);
+					windowResizeManager.makeDraggable(botMid);
+					windowResizeManager.makeDraggable(botRight);
 				}
+				
 				this._state.mask = new iup.popup.Mask();
 			},
 			setPosition : function(x, y) {
@@ -467,7 +534,11 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 				var cfg = this.cfg;
 					cfg.width += dX;
 					cfg.height += dY;
-					this._state.win.doLayout(cfg.width - 2 * cfg.resizeBorder, cfg.height - 2 * cfg.resizeBorder);
+					var el = this._state.table;
+					var styleEl = this._state.tdMid;
+					el.style.width = cfg.width + 'px';
+					el.style.height = cfg.height + 'px';
+					this._state.win.doLayout($(styleEl).width(), $(styleEl).height());
 			},
 			move : function(dX, dY) {
 				var currOffset = $(this._state.table).offset();
@@ -490,13 +561,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 				}	else {
 					this._state.closeButton.hide();
 				}
-			}/*,
-			mask : function() {
-				loadingMask.show();
-			},
-			unmask : function() {
-				loadingMask.hide();
-			}	*/		
+			}	
 		}
 	}
 }())
