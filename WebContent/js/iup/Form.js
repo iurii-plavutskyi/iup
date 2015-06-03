@@ -13,7 +13,7 @@ iup.utils.createComponent('iup.form.Label', iup.layout.Element, {
 	prototype : {
 		_buildEl : function(cfg) {
 			var span = document.createElement("span");
-			span.innerHTML = cfg.text;
+			span.innerHTML = cfg.text || "";
 			this._el = span;
 		},
 		setText : function(text) {
@@ -954,7 +954,7 @@ extend(iup.form.ComplexForm, iup.form.FieldSet);
 iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 	defaults : {
 		fields 		: [], 	
-		labelWidth 	: undefined,
+		labelWidth 	: 100,
 		fieldWidth	: undefined,
 		rowSpace	: 5,
 		columns 	: 1

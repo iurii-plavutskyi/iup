@@ -139,10 +139,10 @@ iup.utils.getParentRow = function(myobj) {
 };
 
 iup.utils.appendStyle = function(element, obj) {
-	var el = $(element);
+	//var el = $(element);
 	for (key in obj) {
-		//element.style[key] = obj[key];
-		el.css(key, obj[key]);
+		element.style[key] = obj[key];
+		//el.css(key, obj[key]);
 	}
 };
 

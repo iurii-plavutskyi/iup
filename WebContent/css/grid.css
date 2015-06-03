@@ -30,6 +30,7 @@ td {
 	border-collapse:collapse;
 }
 
+
 .selectable:hover{
 	background: #369;
 	color: #fff;
@@ -65,6 +66,7 @@ td {
 	background-repeat: repeat-y;
 	background-position: right;
 	position:relative;
+	box-shadow : 1px 0px 0 #ccc;
 }
 
 .grid-header-panel {
@@ -85,9 +87,10 @@ td {
 	background-repeat: repeat-y;
 	background-position: right;
 	position:relative;
+	box-shadow : 1px 0px 0 #ccc;
 }
 
-.grid-th::after{
+/*.grid-th::after{
 	border-right: 1px solid #CCC;
 	content:"";
 	position:absolute;
@@ -95,9 +98,9 @@ td {
 	right:0px;
 	bottom:0px;
 	width : 1px;
-}
+}*/
 
-.grid-td::after{
+/*.grid-td::after{
 	border-right: 1px solid #CCC;
 	content:"";
 	position:absolute;
@@ -105,7 +108,7 @@ td {
 	right:0px;
 	bottom:0px;
 	width : 1px;
-}
+}*/
 
 .dragged-header{
 	background-color: #dedede;
@@ -411,9 +414,20 @@ border-bottom : 1px solid #579;*/
 	background: #57A560;
 }
 
-.button:hover {
+/*.button:hover {
 	background-image: url('../img/btn_hover.png');
-}
+}*//*
+.button-div:hover::after {
+	background-color : rgb(255,255,255);
+	position : absolute;
+	top : 0px;
+	bottom : 0px;
+	left : 0px;
+	right : 0px;
+	content : "";
+	opacity : 0.2;
+	//background-image: url('../img/btn_hover.png');
+}*/
 .add {
 	background: #57A560;
 }
@@ -471,7 +485,7 @@ border-bottom : 1px solid #579;*/
 	position : absolute;
 	top : 4px;
 	right : 9px;
-	z-index:1;
+	//z-index:1;
 }
 .close-tab-button img{
 	margin:1px;
@@ -503,10 +517,18 @@ border-bottom : 1px solid #579;*/
 	border-right : 0px;
 }
 
+.tab-panel-buttons-wrapper {
+	border-bottom : 1px solid #E5E5E5;
+	position : absolute;
+	top : 0px;
+	left : 0px;
+}
+
 .tab-panel-content-wrapper {
 	padding : 5px;
-	border : 1px solid #E5E5E5;
+	border : 0px solid #E5E5E5;
 	background-color : #fff;
+	border-width : 0px 1px 1px 1px;
 }
 
 .stretch {

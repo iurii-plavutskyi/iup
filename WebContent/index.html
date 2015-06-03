@@ -19,37 +19,40 @@
 <script type="text/javascript">
 	$(document).ready( function() {
 		var localSamples = [];
-		var db = new iup.db.Connector({
-			name : 'iup',
-			upgrade : function (db) {
-				/*var objectStore = */db.createObjectStore("samples", { keyPath: "id", autoIncrement : true });
-			},
-			onconnect : function() {
-				db.list('samples', function(items) {
-					localSamples = items;
-					for (var i = 0; i < items.length; i++) {
-						var sample = items[i];
-						addLocalSampleTab(sample);
-						/*var tab = createSampleTab();
-						tab.cfg.items[0].value = sample.content;
-						samples.addItem({title:sample.title, content : tab, closable : true, beforeclose: function(){console.log(this);}, id : sample.id});*/
-					}
-				});
-				
-				
-			},
-			version : 1
-		});
+		try {
+			var db = new iup.db.Connector({
+				name : 'iup',
+				upgrade : function (db) {
+					/*var objectStore = */db.createObjectStore("samples", { keyPath: "id", autoIncrement : true });
+				},
+				onconnect : function() {
+					db.list('samples', function(items) {
+						localSamples = items;
+						for (var i = 0; i < items.length; i++) {
+							var sample = items[i];
+							addLocalSampleTab(sample);
+						}
+					});
+					
+					
+				},
+				version : 1
+			});
+		} catch (e) {
+			console.log (e);
+		}
 	
 		var el = new iup.layout.Element({style: {border : '1px solid', backgroundColor:'#999', width : '100px', height : '100px'}});
 		var panel = new iup.layout.Panel({style: {backgroundColor:'#aff'}});
 	
 		
 		var stretchPanel = new iup.layout.StretchPanel({
-			style: {border : '1px solid #009', backgroundColor:'#fff', padding : '5px'},
-			content : new iup.layout.StretchPanel({
-				style: {border : '1px solid #090', backgroundColor:'#555', padding : '5px'},
-				content	: panel
+			style: {border : '1px solid #ccc'/*, backgroundColor:'#fff', padding : '5px'*/},
+			content : new iup.layout.Panel({
+				//style: {border : '1px solid #090', backgroundColor:'#555', padding : '5px'},
+				items	: [new iup.layout.Element({
+					html : 'If sample on the right returns instance of iup.layout.Panel, it will be set here, once you execute the sample.'
+				})]
 			})
 		});
 		
@@ -235,16 +238,15 @@
 		}
 		
 		var sampleTabName = new iup.form.Field({
-			label : 'Tab Name:',
+			//width : 100,
+			label : 'Tab name:',
 			name : 'tabName',
 			required : true
 		});
 		var tabNameWin = new iup.popup.Window({
 			width : 300,
-			height : 50,
-			//title : "Modal Window",
+			height : 91,
 			content : new iup.form.FieldSet({
-				labelWidth : 100,
 				fields : [sampleTabName]
 			}),
 			bbar : [

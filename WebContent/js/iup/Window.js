@@ -50,7 +50,9 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 	 				var resize = calcResize(prevDragPosition, {x : e.pageX, y : e.pageY}, resizeDiv);
 			        $(resizeDiv).width($(resizeDiv).width() + resize.dX); 
 			        $(resizeDiv).height($(resizeDiv).height() + resize.dY);
-	 				
+					//resizeDiv.style.width = resizeDiv.clientWidth + resize.dX;
+	 				//resizeDiv.style.height = resizeDiv.clientHeight + resize.dY;
+					
 			        if (resize.hMove || resize.vMove) {
 			        	var offset = $(resizeDiv).offset();
 			        	offset.top += resize.vMove ? -resize.dY : 0;
@@ -253,8 +255,8 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 		bbar			: [],
 		content			: undefined,
 		handlers		: [],
-		minHeight		: 0,
-		minWidth		: 0,
+		minHeight		: 59,
+		minWidth		: 100,
 		resizeModel		: 'content', // 'none', 'border', 'content'
 		resizeBorder	: 5,
 		minimizable		: false
@@ -357,11 +359,11 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 				var cfg = this.cfg;
 				var win = this._state.win;
 				if ( !cfg.width) {
-					cfg.width = Math.max(cfg.minWidth, $(win.getEl()).width() + 2 * cfg.resizeBorder);
+					cfg.width = Math.max(cfg.minWidth, $(cfg.content.getEl()).width() + 2 * cfg.resizeBorder);
 				}
-				
+				console.log($(cfg.content.getEl()).height(),$(cfg.content.getEl()).outerHeight(), cfg.content.getEl().clientHeight, cfg.content.getEl().offsetHeight)
 				if ( !cfg.height) {
-					cfg.height = Math.max(cfg.minHeight, $(win.getEl()).height() + 2 * cfg.resizeBorder);
+					cfg.height = Math.max(cfg.minHeight, $(cfg.content.getEl()).height() + 2 * cfg.resizeBorder + 32 + 27);
 				}
 				
 				var left = ($(window).innerWidth() - cfg.width)/2 ;

@@ -602,7 +602,8 @@ iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel, function (
 					style : {
 						position : 'absolute',
 						top : '0px',
-						bottom : '0px'
+						bottom : '0px',
+						overflow : 'hidden'
 					},
 					content : [leftSplitter, getPanelEl(cfg.center), rightSplitter]
 				});
@@ -795,9 +796,11 @@ iup.utils.createComponent('iup.layout.TabPanel', iup.layout.Panel,
 					var container = document.createElement("div");
 					
 					var tabButtonsPanel = document.createElement("div");
-					tabButtonsPanel.style.position = 'absolute';
+					tabButtonsPanel.className = "tab-panel-buttons-wrapper";
+					/*tabButtonsPanel.style.position = 'absolute';
 					tabButtonsPanel.style.top = '0px';
-					tabButtonsPanel.style.left = '0px';
+					tabButtonsPanel.style.left = '0px';*/
+					
 					if (cfg.buttonsPosition === 'top') {
 						//tabButtonsPanel.style.height = cfg.buttonsSize + 'px';
 						tabButtonsPanel.style.right = '0px';
