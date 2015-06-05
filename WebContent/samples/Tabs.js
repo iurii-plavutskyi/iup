@@ -13,7 +13,7 @@ return new iup.layout.TabPanel({
     style: { 
         backgroundColor:'#ffa' 
     }, 
-    items : [ 
+    content : [ 
         {title : 'Tab A', content : tabA}, 
         {title : 'Tab B', content : tabB}, 
         {title : 'Tab C', closable: true, content : tabC}  

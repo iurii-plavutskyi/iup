@@ -288,7 +288,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 			var header = new iup.layout.StretchPanel({
 				style	: {padding : '3px'},
 				content	: new iup.layout.Toolbar({
-					items	: [ 
+					content	: [ 
 						new iup.form.Label({className	: 'window-title', text : this.cfg.title}),
 						'->',
 						minimizeButton,
@@ -308,7 +308,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 				bottom	: new iup.layout.StretchPanel({
 					style	: {padding : '5px 0px 0px 0px'},
 					content	:  new iup.layout.Toolbar({
-						items	: this.cfg.bbar,
+						content	: this.cfg.bbar,
 						marginBetweenItems	: 5
 					})
 				}),
@@ -361,7 +361,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 				if ( !cfg.width) {
 					cfg.width = Math.max(cfg.minWidth, $(cfg.content.getEl()).width() + 2 * cfg.resizeBorder);
 				}
-				console.log($(cfg.content.getEl()).height(),$(cfg.content.getEl()).outerHeight(), cfg.content.getEl().clientHeight, cfg.content.getEl().offsetHeight)
+				//console.log($(cfg.content.getEl()).height(),$(cfg.content.getEl()).outerHeight(), cfg.content.getEl().clientHeight, cfg.content.getEl().offsetHeight)
 				if ( !cfg.height) {
 					cfg.height = Math.max(cfg.minHeight, $(cfg.content.getEl()).height() + 2 * cfg.resizeBorder + 32 + 27);
 				}
@@ -429,7 +429,8 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 						top : defaults.resizeBorder + 'px',
 						left : defaults.resizeBorder + 'px',
 						right : defaults.resizeBorder + 'px',
-						bottom : defaults.resizeBorder + 'px'
+						bottom : defaults.resizeBorder + 'px',
+						overflow:'hidden'
 					}
 				});
 				
@@ -621,7 +622,7 @@ iup.popup.ConfirmationWindow = function(oCfg) {
 		minHeight: 70,
 		content	: new iup.layout.Panel({
 			width : width,
-			items : [ 
+			content : [ 
 				new iup.layout.Element({html : message})
 			]
 		}),

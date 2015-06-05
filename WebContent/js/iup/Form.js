@@ -133,8 +133,11 @@ iup.utils.createComponent('iup.form.Field', iup.layout.Element, {
 		},
 		setField : function(oField) {
 			this.field = oField || new iup.data.Field(name);
-			this._updateEl(this._getInput(), renderer(this.field.get()));
+			this.refresh();
 		},
+		refresh : function() {
+			this._updateEl(this._getInput(), this.cfg.renderer(this.field.get()));
+		}, 
 		enable : function() {
 			this._getInput().disabled = "";
 			$(this._getInput()).addClass("disabled");
@@ -166,6 +169,7 @@ iup.utils.createComponent('iup.form.Field', iup.layout.Element, {
 			
 			var rawVal = this._getRawValue();
 			if (this.cfg.regex && rawVal && !this.cfg.regex.test(rawVal)) {
+				//console.log()
 				return false;
 			}
 			
@@ -852,103 +856,7 @@ iup.form.SelectMany = function(oCfg) {
 
 extend(iup.form.SelectMany, iup.form.Field);
 
-iup.form.ComplexForm = function(oCfg) {
-	var cfg = {
-		fields 		: oCfg.fields, 	
-		labelWidth 	: oCfg.labelWidth,
-		fieldWidth	: oCfg.fieldWidth,
-		rowSpace	: oCfg.rowSpace,
-		content		: oCfg.content
-	};
-	
-	var record = null;
-	
-	var fieldSets = [];
-	
-	this._buildEl = function() {
-		this._items.push(cfg.content);
-		getFieldSets(cfg.content);
-		return cfg.content.getEl();
-	};
-	
-	function getFieldSets(panel) {
-		if (panel instanceof iup.form.FieldSet) {
-			fieldSets.push(panel);
-		} else {
-			var items = panel.getItems();
-			for (var i in items) {
-				getFieldSets(items[i]);
-			}
-		}
-	}
-	
-	iup.form.FieldSet.superclass.constructor.call(this, oCfg);  
-	
-	this.doLayout = function(width, height) {
-		cfg.content.doLayout(width, height);
-	};
-	
-	this.loadRecord = function(rec) {
-		for (var idx in fieldSets) {
-			fieldSets[idx].loadRecord(rec);
-		}
-		record = rec;
-	};
-	
-	this.enable = function() {
-		for (var idx in fieldSets) {
-			fieldSets[idx].enable();
-		}
-	};
-	
-	this.clearInvalid = function() {
-		for (var idx in fieldSets) {
-			fieldSets[idx].clearInvalid();
-		}
-	};
-	
-	this.disable = function() {
-		for (var idx in fieldSets) {
-			fieldSets[idx].disable();
-		}
-	};
-	
-	this.getValues = function() {
-		var ret = {};
-		for (var idx in fieldSets) {
-			var values = fieldSets[idx].getValues();
-			for (var key in values) {
-				ret[key] = values[key];
-			}
-		}
-		
-		return ret;
-	};
-	
-	this.getRecord = function() {
-		if (record === null) {
-			record = new iup.data.Record(this.getValues());
-		}
-		return record;
-	};
-	
-	this.validate = function() {
-		var ret = true;
-		for (var idx in fieldSets) {
-			ret &= fieldSets[idx].validate();
-		}
-		return ret;
-	};
-	
-	this.reset = function() {
-		for (var idx in fieldSets) {
-			fieldSets[idx].reset();
-		}
-	};
-	
-};
 
-extend(iup.form.ComplexForm, iup.form.FieldSet);
 */
 
 iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
@@ -1091,3 +999,114 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 		}
 	}
 });
+
+/*
+iup.form.ComplexForm = function(oCfg) {
+	var cfg = {
+		fields 		: oCfg.fields, 	
+		labelWidth 	: oCfg.labelWidth,
+		fieldWidth	: oCfg.fieldWidth,
+		rowSpace	: oCfg.rowSpace,
+		content		: oCfg.content
+	};
+	
+	var record = null;
+	
+	var fieldSets = [];
+	
+	this._buildEl = function() {
+		this._items.push(cfg.content);
+		getFieldSets(cfg.content);
+		return cfg.content.getEl();
+	};
+	
+	
+	
+	iup.form.FieldSet.superclass.constructor.call(this, oCfg);  
+	
+	this.;
+	
+};*/
+
+iup.utils.createComponent('iup.form.Form', iup.form.FieldSet, function(){
+	function getFieldSets(el) {
+		if (el instanceof iup.form.FieldSet) {
+			this._fieldSets.push(el);
+		} else if (el instanceof iup.form.Field) {
+			this._fields.push(el);
+		} else if (el instanceof iup.layout.Panel){
+			var items = el.cfg.content;
+			for (var i in items) {
+				getFieldSets.call(this, items[i]);
+			}
+		}
+	}
+
+	return {
+		defaults : {
+		
+		},
+		prototype : {
+			_buildEl : function(cfg) {
+				//this._items.push(cfg.content);
+				this._fieldSets = [];
+				this._fields = [];
+				getFieldSets.call(this, cfg.content[0]);
+				this._el = cfg.content[0].getEl();
+			},
+			doLayout : function(width, height) {
+				this.cfg.content[0].doLayout(width, height);
+			},
+			loadRecord : function(rec) {
+				for (var idx in this._fieldSets) {
+					this._fieldSets[idx].loadRecord(rec);
+				}
+				this._record = rec;
+			},
+			enable : function() {
+				for (var idx in this._fieldSets) {
+					this._fieldSets[idx].enable();
+				}
+			},
+			clearInvalid : function() {
+				for (var idx in this._fieldSets) {
+					this._fieldSets[idx].clearInvalid();
+				}
+			},
+			disable : function() {
+				for (var idx in this._fieldSets) {
+					this._fieldSets[idx].disable();
+				}
+			},
+			getValues : function() {
+				var ret = {};
+				for (var idx in this._fieldSets) {
+					var values = this._fieldSets[idx].getValues();
+					for (var key in values) {
+						ret[key] = values[key];
+					}
+				}
+				
+				return ret;
+			},
+			getRecord : function() {
+				if (!this._record) {
+					this._record = new iup.data.Record(this.getValues());
+				}
+				return this._record;
+			},
+			validate : function() {
+				var ret = true;
+				for (var idx in this._fieldSets) {
+					ret &= this._fieldSets[idx].validate();
+				}
+				return ret;
+			},
+			reset : function() {
+				for (var idx in this._fieldSets) {
+					this._fieldSets[idx].reset();
+				}
+			}
+		}
+	}
+}());

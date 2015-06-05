@@ -9,12 +9,12 @@ if(typeof iup.data == "undefined"){
 iup.data.Store = function(oCfg){
 	var cfg = {
 		paginationManager : oCfg.paginationManager, 		// pagination parameters will be automatically included into load request
-		url 		: oCfg.url,								// REQUIRED
+		url 		: oCfg.url,								
 		method 		: oCfg.method || "POST",
 		params 		: oCfg.params || {},					// parameters for ajax call
 		handlers 	: oCfg.handlers || {},					// handlers can be added later using .on(); 
 		fields 		: oCfg.fields || null,					// not implemented, restriction of incoming data, to keep only defined fields
-		autoLoad 	: typeof oCfg.autoLoad == "undefined" ? true : oCfg.autoLoad, // load on creation
+		autoLoad 	: typeof oCfg.autoLoad == "undefined" ? (oCfg.url ? true : false) : oCfg.autoLoad, // load on creation
 		data 		: oCfg.data,
 		filter 		: oCfg.filter || function(){return true;}			// NOT IMPLEMENTED here will be kept filter if any will be applied 
 	};

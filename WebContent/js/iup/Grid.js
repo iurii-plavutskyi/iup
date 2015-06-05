@@ -369,7 +369,7 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 				
 				this._bodyWraper = new iup.layout.ScrollPanel({
 					maskClassName : 'busy-mask',
-					items : [bodyTable]
+					content : [bodyTable]
 				});
 				
 				var container = iup.utils.createEl("div", {
@@ -454,9 +454,13 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 					self.doLayout();
 				});
 				
-				/*cfg.store.on("recordChange", function(record){
-					updateRow(record);
-				});*/
+				this.cfg.store.on("recordChange", function(record){
+					console.log(record);
+					//updateRow(record);
+					_buildBody.apply(self);
+					updateSortInfo.call(self);
+					self.doLayout();
+				});
 				
 				/*if (!cfg.fixedColumns) {
 					addColumnResizability();

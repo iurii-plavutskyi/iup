@@ -72,7 +72,7 @@ iup.utils.createComponent('iup.layout.Element', undefined,
 	iup.utils.createComponent('iup.layout.Panel', iup.layout.Element, 
 		{
 			defaults : {
-				items  :[]
+				content :[]
 			},
 			prototype : {
 				_buildEl : function(cfg) {
@@ -86,8 +86,8 @@ iup.utils.createComponent('iup.layout.Element', undefined,
 						s.height = cfg.height + 'px';
 					}
 						
-					for (var idx in cfg.items) {
-						var item = cfg.items[idx];
+					for (var idx in cfg.content) {
+						var item = cfg.content[idx];
 						if (item instanceof iup.layout.Panel) {
 							//this._items.push(item);
 							el.appendChild (item.getEl());
@@ -344,8 +344,8 @@ iup.utils.createComponent('iup.layout.ScrollPanel', iup.layout.Panel,
 					var s = el.style;
 					s.position = 'relative';
 					
-					for (var idx in cfg.items) {
-						var item = cfg.items[idx];
+					for (var idx in cfg.content) {
+						var item = cfg.content[idx];
 						if (item instanceof iup.layout.Panel) {
 							//this._items.push(item);
 							el.appendChild (item.getEl());
@@ -389,10 +389,32 @@ iup.utils.createComponent('iup.layout.ScrollPanel', iup.layout.Panel,
 			}
 		}
 	}());		
+	
+	iup.utils.createComponent('iup.layout.HtmlPanel', iup.layout.Panel, {
+		defaults : {
+			url : undefined,
+			html : undefined
+		},
+		prototype : {
+			loadContent : function(url) {
+				var self = this;
+				iup.utils.getResource(url, function(data) {
+					self._getStyleEl().innerHTML = data;
+				});
+			}
+		},
+		_init : function () {
+			if (this.cfg.html) {
+				this._getStyleEl().innerHTML = this.cfg.html;
+			}
+			if (this.cfg.url) {
+				this.loadContent(this.cfg.url);
+			}
+		}
+	});
 
 iup.utils.createComponent('iup.layout.StretchPanel', iup.layout.Panel, 
 	{
-	
 		prototype : {
 			_buildEl : function(cfg) {
 
@@ -408,9 +430,9 @@ iup.utils.createComponent('iup.layout.StretchPanel', iup.layout.Panel,
 					overflow = "hidden";
 				}
 				
-				if (cfg.content instanceof iup.layout.Panel) {
+				if (cfg.content[0] instanceof iup.layout.Panel) {
 					//this.cfg.items.push(cfg.content);
-					el.appendChild (cfg.content.getEl());
+					el.appendChild (cfg.content[0].getEl());
 				}
 				
 				wrapper.appendChild(el);
@@ -423,19 +445,20 @@ iup.utils.createComponent('iup.layout.StretchPanel', iup.layout.Panel,
 				
 				var styleEl = this._getStyleEl();
 				
-				if (this.cfg.content instanceof iup.layout.Panel) {
-					this.cfg.content.doLayout($(styleEl).width(), $(styleEl).height());
+				if (this.cfg.content[0] instanceof iup.layout.Panel) {
+					this.cfg.content[0].doLayout($(styleEl).width(), $(styleEl).height());
 				}
 			},
 			setContent : function(item) {
-				this.cfg.content = item;
+				this.cfg.content[0] = item;
 				$(this._getStyleEl()).empty();
+				console.log(item);
 				this._getStyleEl().appendChild (item.getEl());
 				
 				var styleEl = this._getStyleEl();
 				
-				if (this.cfg.content instanceof iup.layout.Panel) {
-					this.cfg.content.doLayout($(styleEl).width(), $(styleEl).height());
+				if (this.cfg.content[0] instanceof iup.layout.Panel) {
+					this.cfg.content[0].doLayout($(styleEl).width(), $(styleEl).height());
 				}
 			}
 		}
@@ -602,8 +625,7 @@ iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel, function (
 					style : {
 						position : 'absolute',
 						top : '0px',
-						bottom : '0px',
-						overflow : 'hidden'
+						bottom : '0px'
 					},
 					content : [leftSplitter, getPanelEl(cfg.center), rightSplitter]
 				});
@@ -658,7 +680,7 @@ iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel, function (
 				
 				
 				this._el = iup.utils.createEl("div", {
-					className : "stretch",
+					//className : "stretch",
 					content : [top, mid, bottom]
 				});
 				
@@ -669,6 +691,22 @@ iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel, function (
 				dragManager.makeDraggable(bottomSplitter);
 				dragManager.makeDraggable(leftSplitter);
 				dragManager.makeDraggable(rightSplitter);
+				
+				if (cfg.top instanceof iup.layout.Panel) {
+					cfg.content.push(cfg.top);
+				}
+				if (cfg.right instanceof iup.layout.Panel) {
+					cfg.content.push(cfg.right);
+				}
+				if (cfg.bottom instanceof iup.layout.Panel) {
+					cfg.content.push(cfg.bottom);
+				}
+				if (cfg.left instanceof iup.layout.Panel) {
+					cfg.content.push(cfg.left);
+				}
+				if (cfg.center instanceof iup.layout.Panel) {
+					cfg.content.push(cfg.center);
+				}
 			},
 			applyLayoutConfig : function(){
 				var cfg = this.cfg,
@@ -778,7 +816,6 @@ iup.utils.createComponent('iup.layout.TabPanel', iup.layout.Panel,
 					event.cancelBubble = true;
 				}
 				closeButton.innerHTML = '<img height="10" width="10" style="fill:#f00" src="svg/close.svg" />';
-				//closeButton.innerHTML = '<svg role="img" style="fill:#00f;" height="10" width="10"><use xlink:href="svg/close-icon.svg"></use></svg>';
 			}
 			
 			this.tabButtonsPanel.appendChild(button.getEl());
@@ -787,9 +824,11 @@ iup.utils.createComponent('iup.layout.TabPanel', iup.layout.Panel,
 		}
 	
 		return {
-			defaults : {
-				buttonsPosition : 'top',
-				buttonsSize : 20
+			defaults : function (cfg) {
+				return {
+					buttonsPosition : 'top',
+					buttonsSize : !cfg.buttonsPosition || cfg.buttonsPosition === 'top' ? 20 : 100
+				}
 			},
 			prototype : {
 				_buildEl : function(cfg) {
@@ -797,12 +836,7 @@ iup.utils.createComponent('iup.layout.TabPanel', iup.layout.Panel,
 					
 					var tabButtonsPanel = document.createElement("div");
 					tabButtonsPanel.className = "tab-panel-buttons-wrapper";
-					/*tabButtonsPanel.style.position = 'absolute';
-					tabButtonsPanel.style.top = '0px';
-					tabButtonsPanel.style.left = '0px';*/
-					
 					if (cfg.buttonsPosition === 'top') {
-						//tabButtonsPanel.style.height = cfg.buttonsSize + 'px';
 						tabButtonsPanel.style.right = '0px';
 					} else {
 						tabButtonsPanel.style.bottom = '0px';
@@ -816,7 +850,6 @@ iup.utils.createComponent('iup.layout.TabPanel', iup.layout.Panel,
 					
 					if (cfg.buttonsPosition === 'top') {
 						content.style.left = '0px';
-						//content.style.top = cfg.buttonsSize + 'px';
 					} else {
 						content.style.left = cfg.buttonsSize + 'px';
 						content.style.top = '0px';
@@ -824,25 +857,26 @@ iup.utils.createComponent('iup.layout.TabPanel', iup.layout.Panel,
 					
 					content.className = 'tab-panel-content-wrapper';
 					
-					container.appendChild(tabButtonsPanel);
+					
 					container.appendChild(content);
+					container.appendChild(tabButtonsPanel);
 					
 					this._el = container;
 					this.tabButtonsPanel = tabButtonsPanel;
 					this.content = content;
 					
 					var self = this;
-					for (var idx in cfg.items) {
-						var item = cfg.items[idx];
+					for (var idx in cfg.content) {
+						var item = cfg.content[idx];
 						buildTab.call(this, item);
 					}
 				},
 				addItem : function(item, idx) {
-					this.cfg.items.push(item);
+					this.cfg.content.push(item);
 					
 					buildTab.call(this, item, idx);
 					
-					if (this.cfg.items.length === 1) {
+					if (this.cfg.content.length === 1) {
 						this.discloseItem(0);
 					}
 					
@@ -855,7 +889,7 @@ iup.utils.createComponent('iup.layout.TabPanel', iup.layout.Panel,
 				},
 				removeItem : function(idx) {
 					var proceed = true;
-					var item = this.cfg.items[idx];
+					var item = this.cfg.content[idx];
 					if (typeof item.beforeclose == "function") {
 						if (item.beforeclose() === false) {
 							return;
@@ -868,7 +902,7 @@ iup.utils.createComponent('iup.layout.TabPanel', iup.layout.Panel,
 					var buttons = this.tabButtonsPanel.children;
 					this.tabButtonsPanel.removeChild(buttons[idx]);
 					
-					this.cfg.items.splice(idx, 1);
+					this.cfg.content.splice(idx, 1);
 					if (this.disclosedItem === item) {
 						if (buttons.length > idx) {
 							this.discloseItem(idx);
@@ -909,7 +943,7 @@ iup.utils.createComponent('iup.layout.TabPanel', iup.layout.Panel,
 						$(buttons[i]).find('button').removeClass("selected");
 					};
 					$(buttons[idx]).find('button').addClass("selected");
-					var item = this.cfg.items[idx];
+					var item = this.cfg.content[idx];
 					if (typeof item.onDisclose === "function") {
 						item.onDisclose(true);
 					}
@@ -955,8 +989,8 @@ iup.utils.createComponent('iup.layout.Toolbar', iup.layout.Panel,
 				tr.appendChild(rightTd);
 				
 				var left = true;
-				for (var i = 0; i < cfg.items.length; i++) {
-					var item = cfg.items[i];
+				for (var i = 0; i < cfg.content.length; i++) {
+					var item = cfg.content[i];
 					if (item instanceof iup.layout.Element) {
 						item = item.getEl();
 					} 

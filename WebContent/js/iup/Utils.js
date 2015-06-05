@@ -16,13 +16,24 @@ function extend(Child, Parent) {
 
 iup.utils.merge = function (defaults, config) {
 	var ret = {};
+	if (typeof defaults == "function") {
+		defaults = defaults(config);
+	}
 	for (var key in defaults) {
-		ret[key] = defaults[key];
+		if (Array.isArray(defaults[key])) {
+			ret[key] = [];
+		} else {
+			ret[key] = defaults[key];
+		}
 	}
 	for (var key in config) {
 		var val = config[key];
 		if (typeof val === 'object' && typeof ret[key] === 'object' && !Array.isArray(val)) {
-			ret[key] = iup.utils.merge(ret[key], val);
+			if (Array.isArray(ret[key])) {
+				ret[key] = [val];
+			} else {
+				ret[key] = iup.utils.merge(ret[key], val);
+			}
 		} else {
 			ret[key] = config[key];
 		}
@@ -98,6 +109,16 @@ iup.utils.createComponent = function(name, parent, oCfg) {
 		}
 		return root;
 	}
+}
+
+iup.utils.getResource = function(url, callback) {
+	$.ajax({
+		url: url,
+		dataType :'text',
+		success : function(data,b,c) {
+			callback(data);
+		}
+	})	
 }
 
 iup.utils.isChildOf = function(myobj,ContainerObj) {	// also true if myobj == containerObj 
