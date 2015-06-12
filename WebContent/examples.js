@@ -33,12 +33,28 @@ function ExamplesPanel() {
 		selectionModel : iup.layout.Grid.SELECTION_SINGLE
 	});
 	
+	var apply = new iup.Button({
+		text : 'Apply',
+		handler : function(){editor.getRecord().commit();}
+	})
+	var reset = new iup.Button({
+		text : 'Cancel',
+		handler : function(){
+			//editor.getRecord().rollback();
+			editor.reset();
+		}
+	})
+	
 	var editor = new iup.form.FieldSet({
 		fields : [
 			{name : 'name', label : "Name:", required : true},
 			{name : 'lastName'},
 			{name : 'birthDate', type : 'date', label : 'Birth:', showTime : true}
-		]
+		],
+		controls : {
+			'r' : reset,
+			'a' : apply
+		}
 	});
 	
 	grid.events.on('select', function(selection){
@@ -54,18 +70,9 @@ function ExamplesPanel() {
 			center : editor,
 			bottom : new iup.layout.Toolbar({
 				content : [
-					new iup.Button({
-						text : 'Apply',
-						handler : function(){editor.getRecord().commit();}
-					}),
+					apply,
 					'->',
-					new iup.Button({
-						text : 'Cancel',
-						handler : function(){
-							//editor.getRecord().rollback();
-							editor.reset();
-						}
-					})
+					reset
 				]
 			})
 		})

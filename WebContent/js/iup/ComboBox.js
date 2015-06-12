@@ -198,7 +198,7 @@ iup.utils.createComponent('iup.form.Combobox', iup.form.Field, function(){
 				if (itemIdx > -1) {
 					select(-1);
 				}
-				console.log(offset, inputWidth);
+				//console.log(offset, inputWidth);
 				var upper = input.value.toUpperCase();
 				for (var idx = 0; idx < data.length; idx ++) {
 					var item = data[idx];

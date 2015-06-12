@@ -552,11 +552,11 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 				this._state.table.style.display = "none";
 			},
 			close : function() {
-				$(table).remove();
+				$(this._state.table).remove();
 				this._state.mask.remove();
 			},
 			getEl : function() {
-				return table;
+				return this._state.table;
 			},
 			setClosable : function(val) {
 				if (val) {

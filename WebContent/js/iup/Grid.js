@@ -1,6 +1,19 @@
 
 iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel, 
 	function () {
+		function selectRow(row) {
+			var selectedRows = this._selectedRows;
+			if (this.cfg.selectionModel == statics.SELECTION_SINGLE) {
+				$.each(selectedRows, function(idx, selection){
+					$(selection).removeClass("grid-selected-row");
+				});
+				selectedRows.splice(0, selectedRows.length);
+				$(row).addClass("grid-selected-row");
+				selectedRows.push(row);
+			}
+		
+			this.events.fireEvent("select", selectedRows);
+		}
 		function registerEvents(){
 			var self = this,
 				cfg = self.cfg;
@@ -23,12 +36,13 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 					var selectedRows = self._selectedRows;
 					if (cfg.selectionModel != statics.SELECTION_NONE && row.record) {
 						if (cfg.selectionModel == statics.SELECTION_SINGLE) {
-							$.each(selectedRows, function(idx, selection){
+							/*$.each(selectedRows, function(idx, selection){
 								$(selection).removeClass("grid-selected-row");
 							});
 							selectedRows.splice(0, selectedRows.length);
 							$(row).addClass("grid-selected-row");
-							selectedRows.push(row);
+							selectedRows.push(row);*/
+							selectRow.call(self,row);
 						}
 						
 						if (cfg.selectionModel == statics.SELECTION_MULTI) {
@@ -429,7 +443,79 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 						this._bodyWraper.doLayout(width , height - updatedHeaderHeight);
 					}
 				}
-			}
+			},
+			select : function(callback) {
+				var self = this,
+					cfg = this.cfg,
+					el = this.getEl(),
+					items = this._body.children;
+				
+				var LEFT = 37,
+					UP = 38,
+					RIGHT = 39,
+					DOWN = 40,
+					ENTER = 13,
+					ESC = 27;
+				
+				
+				function init() {
+					$(el).addClass('panel-selected');
+					el.setAttribute('tabIndex', '-1');
+					el.focus();
+					el.onblur = removeSelection;
+					el.onkeypress = handler;
+					//$(marked).addClass('field-marked');
+					selectRow.call(self,marked);
+				}
+				
+				function removeSelection () {
+					$(el).removeClass('panel-selected');
+					el.removeAttribute('tabIndex');
+					el.onkeypress = undefined;
+					el.onblur = undefined;
+					//$(marked).removeClass('field-marked');
+				}
+
+				var position = 0,
+					marked = items[position];
+				init();
+				
+				function handler(evt) {
+					if (evt.keyCode === ESC) {
+						removeSelection ()
+						if (typeof callback == "function") {
+							setTimeout(function() {
+								callback();
+							},5);
+							
+						}
+					} else if (evt.keyCode === ENTER) {
+						self.events.fireEvent('rowactivate', marked);
+						var fieldIdx = position.col + position.row * self.cfg.columns;
+						//console.log (fieldIdx);
+						
+						removeSelection ();
+					}
+					
+					
+					var target;
+					if (evt.keyCode === UP && position> 0) {
+						position--;
+					} else if (evt.keyCode === DOWN && position < items.length - 1) {
+						position++;
+					}
+					
+					marked = items[position];
+					/*if (marked !== itemToMark) {
+						$(marked).removeClass('field-marked');
+						marked = itemToMark;
+						$(marked).addClass('field-marked');
+					}*/
+					
+					selectRow.call(self,marked);
+				}
+				
+			},
 			
 		};
 		

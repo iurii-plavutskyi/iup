@@ -778,3 +778,32 @@ border-bottom : 1px solid #579;*/
 	border-top-width : 1px;
 	border-bottom-width : 1px;
 }
+
+.panel-selected{
+	border : 1px dotted red;
+}
+.panel-selected:focus{
+	border : 1px solid green;
+}
+.panel-marked::after{
+	position : absolute;
+	left : 0px;
+	top : 0px;
+	right : 0px;
+	bottom : 0px;
+	background-color : #0f0;
+	opacity : 0.2;
+	content : "";
+}
+
+.field-selected  {
+	border : 1px solid green;
+}
+
+.field-marked{
+	background-color : #aaa;
+}
+
+.field-marked  input{
+	background-color : #aaa;
+}

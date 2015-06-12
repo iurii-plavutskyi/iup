@@ -109,6 +109,83 @@ iup.utils.createComponent('iup.form.Field', iup.layout.Element, {
 			this._el = ret;
 			return ret; 
 		},
+		select : function(callback) {
+			var self = this,
+				cfg = this.cfg,
+				el = this._getInput();
+			
+			var LEFT = 37,
+				UP = 38,
+				RIGHT = 39,
+				DOWN = 40,
+				ENTER = 13,
+				ESC = 27;
+			
+								
+			
+			
+			function init() {
+				$(el).addClass('field-selected');
+				//el.setAttribute('tabIndex', '-1');
+				el.focus();
+				el.onblur = removeSelection;
+				el.onkeypress = handler;
+			}
+			
+			function removeSelection () {
+				$(el).removeClass('field-selected');
+				//el.removeAttribute('tabIndex');
+				el.onkeypress = undefined;
+				el.onblur = undefined;
+				//$(marked).removeClass('field-marked');
+			}
+
+			init();
+			
+			function handler(evt) {
+				if (evt.keyCode === ESC) {
+					removeSelection ()
+					if (typeof callback == "function") {
+						setTimeout(function() {
+							callback();
+						},5);
+						
+					}
+				} else if (evt.keyCode === ENTER) {
+					removeSelection ();
+					if (typeof callback == "function") {
+						setTimeout(function() {
+							callback();
+						},5);
+						
+					}
+					/*var target = self.cfg.content[currentItem].content;
+					if (target) {
+						removeSelection ();
+						target.select(function(){init();});
+					}*/
+				}
+				
+				/*var rows = Math.ceil(cfg.fields.length / cfg.columns);
+				var target;
+				if (evt.keyCode === LEFT && position.col > 0) {
+					position.col--;
+				} else if (evt.keyCode === UP && position.row > 0) {
+					position.row--;
+				} else if (evt.keyCode === RIGHT && position.col < self.cfg.columns - 1) {
+					position.col++;
+				} else if (evt.keyCode === DOWN && position.row < rows - 1) {
+					position.row++;
+				}
+				
+				itemToMark = items[position.row].children[position.col * 2 + 1];
+				if (marked !== itemToMark) {
+					$(marked).removeClass('field-marked');
+					marked = itemToMark;
+					$(marked).addClass('field-marked');
+				}*/
+			}
+		},
 		getField : function() {
 			return this.field;
 		},
@@ -169,14 +246,13 @@ iup.utils.createComponent('iup.form.Field', iup.layout.Element, {
 			
 			var rawVal = this._getRawValue();
 			if (this.cfg.regex && rawVal && !this.cfg.regex.test(rawVal)) {
-				//console.log()
 				return false;
 			}
 			
 			return this.cfg.validator(val, this._getRawValue());
 		},
 		_getRawValue : function() {
-			return this.getEl().value;
+			return this._getInput().value;
 		},
 		setWidth : function(width) {
 			if (width > 0) {
@@ -196,8 +272,6 @@ iup.utils.createComponent('iup.form.Field', iup.layout.Element, {
 		this._updateEl(this._getInput(), this.cfg.renderer(this.field.get()));
 	}
 });
-
-
 
 /*iup.form.Field = function(oCfg) {	
 	//var cfg = {	// [{label:String, required:boolean, name : String, validator : function(val){}, renderer : function(val){}, parser : function(val){}}..]
@@ -872,8 +946,6 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 		_buildEl : function(cfg) {
 			this.fields = [];
 			
-			
-			
 			var rows = Math.ceil(cfg.fields.length / cfg.columns);
 			
 			var table = document.createElement("table");
@@ -940,33 +1012,147 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 						
 			this._el = table;
 		},
+		select : function(callback) {
+			var self = this,
+				cfg = this.cfg,
+				el = this.getEl(),
+				items = el.children[0].children;
+			
+			var rows = Math.ceil(cfg.fields.length / cfg.columns);
+			
+			var LEFT = 37,
+				UP = 38,
+				RIGHT = 39,
+				DOWN = 40,
+				ENTER = 13,
+				ESC = 27;
+			
+			
+			function init() {
+				$(el).addClass('panel-selected');
+				el.setAttribute('tabIndex', '-1');
+				el.focus();
+				el.onblur = removeSelection;
+				el.onkeypress = handler;
+				$(marked).addClass('field-marked');
+			}
+			
+			function removeSelection () {
+				$(el).removeClass('panel-selected');
+				el.removeAttribute('tabIndex');
+				el.onkeypress = undefined;
+				el.onblur = undefined;
+				$(marked).removeClass('field-marked');
+			}
+
+			var position = {row : 0, col : 0},
+				marked = items[position.row].children[position.col * 2 + 1];
+			init();
+			
+			function handler(evt) {
+				if (evt.keyCode === ESC) {
+					removeSelection ()
+					if (typeof callback == "function") {
+						setTimeout(function() {
+							callback();
+						},5);
+						
+					}
+				} else if (evt.keyCode === ENTER) {
+					var fieldIdx = position.col + position.row * self.cfg.columns;
+					//console.log (fieldIdx);
+					var target = self.fields[fieldIdx];
+					
+					if (target) {
+						removeSelection ();
+						target.select(function(){init();});
+					} 
+				} else if (evt.altKey) {
+					var key = evt.key;
+					console.log(evt,key);
+					var action = self.cfg.controls[key];
+					if (action) {
+						if (action instanceof iup.Button) {
+							action.cfg.handler();
+						} else if (typeof action === "function") {
+							action();
+						}
+					}
+					evt.cancelBubble = true;
+					
+				}
+				
+				
+				var target;
+				if (evt.keyCode === LEFT && position.col > 0) {
+					position.col--;
+				} else if (evt.keyCode === UP && position.row > 0) {
+					position.row--;
+				} else if (evt.keyCode === RIGHT && position.col < self.cfg.columns - 1) {
+					position.col++;
+				} else if (evt.keyCode === DOWN && position.row < rows - 1) {
+					position.row++;
+				}
+				
+				itemToMark = items[position.row].children[position.col * 2 + 1];
+				if (marked !== itemToMark) {
+					$(marked).removeClass('field-marked');
+					marked = itemToMark;
+					$(marked).addClass('field-marked');
+				}
+			}
+			
+		},
+		_eachField : function (action) {
+			for (var idx in this.fields) {
+				var field = this.fields[idx];
+				if (field) {
+					action(field);
+				}
+			}
+		},
 		doLayout : function(width, height) {
 			//skip for now
 		},
 		loadRecord : function(rec) {
-			for (var idx in this.fields) {
+			/*for (var idx in this.fields) {
 				var field = this.fields[idx];
 				field.setField(rec.getField(field.getName()));
-			}
+			}*/
+			this._eachField(function(field) {
+				field.setField(rec.getField(field.getName()));
+			});
+			
 			this.clearInvalid();
 			this._record = rec;
 		},		
 		enable : function() {
-			for (var idx in this.fields) {
+			/*for (var idx in this.fields) {
 				if (!this.fields[idx].isReadOnly()) {
 					this.fields[idx].enable();
 				}
-			}
+			}*/
+			this._eachField(function(field) {
+				if (field.isReadOnly()) {
+					field.enable();
+				}
+			});
 		},		
 		clearInvalid : function() {
-			for (var idx in this.fields) {
+			this._eachField(function(field) {
+				field.clearInvalid();
+			});
+			/*for (var idx in this.fields) {
 				this.fields[idx].clearInvalid();
-			}
+			}*/
 		},
 		disable : function() {
-			for (var idx in this.fields) {
+			this._eachField(function(field) {
+				field.disable();
+			});
+			/*for (var idx in this.fields) {
 				this.fields[idx].disable();
-			}
+			}*/
 		},		
 		getRecord : function() {
 			if (!this._record) {
@@ -976,26 +1162,35 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 		},
 		getValues : function() {
 			var ret = {};
-			for (var idx in this.fields) {
+			this._eachField(function(field) {
+				ret[field.getName()] = field.getField().get();
+			});
+			/*for (var idx in this.fields) {
 				var field = this.fields[idx];
 				ret[field.getName()] = field.getField().get();
-			}
+			}*/
 			return ret;
 		},
 		validate : function() {
 			var ret = true;
-			for (var idx in this.fields) {
+			this._eachField(function(field) {
+				ret &= field.validate();
+			});
+			/*for (var idx in this.fields) {
 				var field = this.fields[idx];
 				ret &= field.validate();
-			}
+			}*/
 			return ret;
 			
 		},
 		reset : function() {
-			for (var idx in this.fields) {
+			this._eachField(function(field) {
+				field.setValue(field.getField().getOriginalValue());
+			});
+			/*for (var idx in this.fields) {
 				var field = this.fields[idx];
 				field.setValue(field.getField().getOriginalValue());
-			}
+			}*/
 		}
 	}
 });

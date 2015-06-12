@@ -318,7 +318,7 @@ iup.utils.createComponent('iup.form.DateField', iup.form.Field, function() {
 			showTime : false,
 			regex : cfg. showTime ? /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$/ : /^\d{2}\/\d{2}\/\d{4}$/,
 			renderer : function(val) {
-				return iup.utils.convertDate(val, cfg.showTime);
+				return iup.utils.convertDate(val, cfg.showTime || false);
 			},
 			parser :  function(val, fieldValue) {
 				return Date.parse(val);
@@ -332,6 +332,7 @@ iup.utils.createComponent('iup.form.DateField', iup.form.Field, function() {
 		defaults : defaults,
 		prototype : {
 			_buildEl : function(oCfg) {
+			console.log(oCfg);
 				//var em = this._eventManager;
 				var self = this;
 				

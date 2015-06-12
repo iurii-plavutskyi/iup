@@ -58,8 +58,9 @@ iup.utils.createComponent('iup.Button', iup.layout.Element, function(){
 					cfg.disabled = true;
 				}
 			},
-			setHandler : function(callback) {
-				this.getEl().onclick = callback;
+			setHandler : function(handler) {
+				this.cfg.handler = handler;
+				this.getEl().onclick = handler;
 			}
 		}
 	}
