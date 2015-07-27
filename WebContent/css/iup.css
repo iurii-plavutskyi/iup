@@ -41,9 +41,10 @@ td {
 }
 
 .grid-header{
-	margin : 4px 10px;
+	padding : 10px 0;
 	overflow : hidden;
-	font-size: 11px;
+	font-size: 13px;
+	color : #fff;
 }
 
 /*.grid th:hover{
@@ -63,14 +64,14 @@ td {
 	border-bottom : 1px solid #CCCCCC;
 	text-align : center;
 	//background-image: url(../img/border_CCC.png);
-	background-repeat: repeat-y;
-	background-position: right;
+	//background-repeat: repeat-y;
+	//background-position: right;
 	position:relative;
 	box-shadow : 1px 0px 0 #ccc;
 }
 
 .grid-header-panel {
-	background-color: #dedede;
+	background-color: rgb(153,153,153);
 	overflow : hidden;
 	position : absolute;
 	top : 0px;
@@ -79,13 +80,13 @@ td {
 }
 
 .grid-th{
-	border-bottom: 1px solid #CCCCCC;
+	border-bottom: 1px solid #111;
 	font-weight: bold;
-	line-height: 1.2em;
+	line-height: 17px;
 	text-align: center;
 	//background-image: url(../img/border_CCC.png);
-	background-repeat: repeat-y;
-	background-position: right;
+//	background-repeat: repeat-y;
+//	background-position: right;
 	position:relative;
 	box-shadow : 1px 0px 0 #ccc;
 }
@@ -439,8 +440,13 @@ border-bottom : 1px solid #579;*/
 }
 
 .form-field {
-	height: 20px;
-	border: 1px solid #5384A9;
+	//height: 20px;
+	//border: 1px solid #5384A9;
+	border: 1px solid #aaa;
+    border-radius: 4px;
+
+    line-height: inherit;
+   // width: 100%;
 }
 
 .filters {
@@ -471,6 +477,7 @@ border-bottom : 1px solid #579;*/
 	//border-bottom : 0px;
 	background-color : #ccc;
 	position: relative; 
+	color : #333;
 	//z-index:1;
 }
 
@@ -540,9 +547,9 @@ border-bottom : 1px solid #579;*/
 }
 
 .disabled {
-	background-color: #AAAAAA !important;
-	background-image: none !important;
-	cursor: default !important;
+	background-color: #eee;
+	background-image: none;
+	cursor: default;
 }
 
 .fieldset {
@@ -570,15 +577,18 @@ border-bottom : 1px solid #579;*/
 }
 
 .combo-button{
-	height : 18px;
-	width : 19px;
+	bottom: 1px;
+	width : 22px;
 	position : absolute;
 	right : 1px;
 	top : 1px;
-	border-left : 1px solid #5384A9;
+	border-left : 1px solid #aaa;
 	background-color : #d0d8df;
-	background-image : url("../svg/dropdown.svg");
 	background-repeat : no-repeat;
+	font-size : 20px;
+	overflow : hidden; 
+	color : #555;
+	cursor : pointer;
 }
 
 .combo-list{
@@ -626,10 +636,12 @@ border-bottom : 1px solid #579;*/
 
 .number-spin {
 	width : 10px;
-	height : 18px;
+	bottom : 1px;
 	position : absolute;
 	top : 1px;
 	right : 1px;
+	font-size : 8px;
+	color : #555;
 }
 
 .disabled .number-spin {
@@ -637,21 +649,21 @@ border-bottom : 1px solid #579;*/
 }
 
 .number-inc {
-	width : 9px;
-	height : 8px;
-	border-left : 1px solid #5384A9;
-	border-bottom : 1px solid #5384A9;
+	width : 10px;
+	height : 50%;
+	border-left : 1px solid #999;
+	border-bottom : 1px solid #999;
 	background-color : #d0d8df;
-	background-image : url("../img/inc.png");
+	cursor : pointer;
 }
 
 .number-dec {
-	width : 9px;
-	height : 8px;
-	border-left : 1px solid #5384A9;
-	border-top : 1px solid #5384A9;
+	width : 10px;
+	height : 50%;
+	border-left : 1px solid #999;
+	border-top : 1px solid #999;
 	background-color : #d0d8df;
-	background-image : url("../img/dec.png");
+	cursor : pointer;
 }
 
 .datepicker-button {
@@ -757,8 +769,8 @@ border-bottom : 1px solid #579;*/
 
 .splitter{
 	position : absolute;
-	background-color:#aaa;
-	border : 0px solid #777;
+//	background-color:#aaa;
+	border : 0px dotted #777;
 } 
 
 .v-splitter{
@@ -779,9 +791,6 @@ border-bottom : 1px solid #579;*/
 	border-bottom-width : 1px;
 }
 
-/*.panel-selected{
-	border : 1px dotted red;
-}*/
 .panel-selected:focus::after{
 	border : 5px solid green;
 	position : absolute;
@@ -814,3 +823,40 @@ border-bottom : 1px solid #579;*/
 .field-marked  input{
 	background-color : #aaa;
 }
+
+.action-button{
+    border: 0 none;
+    border-radius: 3px;
+    color: #fff;
+    cursor: pointer;
+    font-family: "dinbold",sans-serif;
+    font-size: 13px;
+    line-height: 18px;
+    padding: 5px 10px;
+    text-transform: uppercase;
+    background-color: #999;
+}
+
+.action-button:hover {
+    background-color: #3d5d9e;
+}
+
+.title {
+    font-size: 21px;
+    padding-right: 10px;
+    font-family: dinbold;
+}
+
+.title-panel {
+	border-bottom: 1.5px dotted;
+    padding-bottom: 5px;
+}
+
+.panel-border {
+	border: 1px solid #111;
+}
+
+.form-panel {
+	border : 1px solid #999;
+	padding: 5px;
+} 

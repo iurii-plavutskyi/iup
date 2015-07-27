@@ -282,3 +282,64 @@ iup.utils.createEl = function(tag, oCfg) {
 	}
 	return el;
 };
+
+iup.utils.getValue = function (root, key) {
+	if (root === null || typeof root == 'undefined') {
+		return undefined;
+	}
+	
+	if (key.indexOf('.') > -1) {
+		return getByPath(key);
+	}
+	
+	return root[key];
+	
+	function getByPath(key) {
+		var split = key.split('.');
+		var data = root[split[0]];
+		
+		if (data === null || data === undefined) {
+			return null;
+		} 
+		var val = findValue(data, split, 1);
+		return val;
+	}
+	
+	function findValue(data, path, idx) {
+		var keyName = path[idx];
+		var val = data[keyName];
+		if (val === null || val === undefined) {
+			return null;
+		} 
+		if (idx === path.length - 1) {
+			return val;
+		} 
+		return findValue(val, path, ++idx);
+	}
+};
+
+/*
+function setValue(data, path, idx, value) {
+	var keyName = path[idx];
+	
+	if (idx === path.length - 1) {
+		data[keyName] = value;
+	} else {
+		var obj = data[keyName];
+		if (obj === null || obj === undefined) {
+			obj = {};
+			data[keyName] = obj;
+		} 
+		setValue(obj, path, ++idx, value);
+	}
+}
+
+function setNestedValue(key, value) {
+	var split = key.split('.');
+	var field = record[split[0]];
+	var data = field.get() || {};
+	setValue(data, split, 1, value);
+	return data;
+}
+*/
+

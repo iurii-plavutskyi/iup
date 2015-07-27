@@ -1,10 +1,4 @@
-if(typeof iup == "undefined") {
-	iup = {};
-}
-
-if(typeof iup.form == "undefined") {
-	iup.form = {};
-}
+'use strict';
 
 iup.utils.createComponent('iup.form.Label', iup.layout.Element, {
 	defaults : {
@@ -32,7 +26,7 @@ iup.utils.createComponent('iup.form.Field', iup.layout.Element, {
 		name 		: undefined,
 		readOnly	: false,
 		field		: undefined,
-		required 	: false,
+		required 	: undefined,
 		width 		: undefined,// || 200;
 		regex		: undefined,
 		placeholder : undefined,
@@ -60,9 +54,9 @@ iup.utils.createComponent('iup.form.Field', iup.layout.Element, {
 			ret.className = "form-field";	
 			ret.style.width = cfg.width ? cfg.width + "px" : '100%';
 			
-			if (cfg.readOnly) {
-				ret.disabled = "disabled";
-			}
+//			if (cfg.readOnly) {
+//				ret.disabled = "disabled";
+//			}
 			
 			this.events.on("changed", function(val, originalValue, bSilent) {
 				self.field.set(val, bSilent);
@@ -217,7 +211,7 @@ iup.utils.createComponent('iup.form.Field', iup.layout.Element, {
 		}, 
 		enable : function() {
 			this._getInput().disabled = "";
-			$(this._getInput()).addClass("disabled");
+			$(this._getInput()).removeClass("disabled");
 		},
 		disable : function() {
 			this._getInput().disabled = "disabled";
@@ -231,6 +225,9 @@ iup.utils.createComponent('iup.form.Field', iup.layout.Element, {
 		},
 		isRequired : function() {
 			return this.cfg.required;
+		},
+		setRequired : function(required) {
+			this.cfg.required = required;
 		},
 		isReadOnly : function() {
 			return this.cfg.readOnly;
@@ -270,6 +267,9 @@ iup.utils.createComponent('iup.form.Field', iup.layout.Element, {
 	_init : function () {
 		this.field = this.cfg.field || new iup.data.Field(this.cfg.name, this.cfg.value);
 		this._updateEl(this._getInput(), this.cfg.renderer(this.field.get()));
+		if (this.cfg.readOnly) {
+			this.disable();
+		}
 	}
 });
 
@@ -473,7 +473,7 @@ extend(iup.form.Field, iup.layout.Element);
 
 iup.utils.createComponent('iup.form.NumberField', iup.form.Field, {  
 	statics : {
-		type : 'number',
+		type : 'number'
 	},
 	defaults : {
 		regex : /^[-]?\d*$/,
@@ -494,7 +494,7 @@ iup.utils.createComponent('iup.form.NumberField', iup.form.Field, {
 
 iup.utils.createComponent('iup.form.Spinbox', iup.form.NumberField, { 
 	statics : {
-		type : 'spinbox',
+		type : 'spinbox'
 	},
 	prototype : {
 		_buildEl : function(oCfg) {
@@ -508,9 +508,6 @@ iup.utils.createComponent('iup.form.Spinbox', iup.form.NumberField, {
 			input.type = 'text';
 			input.className = "form-field spin-box";	
 			
-			if (oCfg.readOnly) {
-				input.disabled = "disabled";
-			}
 			self.events.on("changed", function(val, originalValue, bSilent) {
 				self.getField().set(val, bSilent);
 				self.validate();
@@ -538,10 +535,12 @@ iup.utils.createComponent('iup.form.Spinbox', iup.form.NumberField, {
 			
 			var inc = document.createElement('div');
 			inc.className = 'number-inc';
+			inc.innerHTML = '<span class="glyphicon glyphicon-triangle-top" aria-hidden="true"></span>';
 			buttonsDiv.appendChild(inc);
 			
 			var dec = document.createElement('div');
 			dec.className = 'number-dec';
+			dec.innerHTML = '<span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span>';
 			buttonsDiv.appendChild(dec);
 			
 			inc.onclick = function() {
@@ -577,15 +576,26 @@ iup.utils.createComponent('iup.form.Spinbox', iup.form.NumberField, {
 			};
 			
 			wrapper.appendChild(buttonsDiv);
+			this._state = {
+				buttonsDiv : buttonsDiv
+			}
 			this._el = wrapper;
 			return wrapper; 
+		},
+		disable : function () {
+			this.constructor.superclass.disable.call(this);
+			this._state.buttonsDiv.style.display = 'none';
+		},
+		enable : function () {
+			this.constructor.superclass.enable.call(this);
+			this._state.buttonsDiv.style.display = 'block';
 		}
 	}
 });
 
 iup.utils.createComponent('iup.form.CheckboxField', iup.form.Field, {
 	statics : {
-		type : 'checkbox',
+		type : 'checkbox'
 	},
 	prototype : {
 		_updateEl : function(el, val) {
@@ -607,9 +617,9 @@ iup.utils.createComponent('iup.form.CheckboxField', iup.form.Field, {
 				this._updateEl(cfg.field.get());
 			}
 			
-			if (cfg.readOnly) {
-				ret.disabled = "disabled";
-			}
+//			if (cfg.readOnly) {
+//				ret.disabled = "disabled";
+//			}
 			
 			this.events.on("changed", function(val, originalValue, bSilent) {
 				self.getField().set(val, bSilent);
@@ -646,6 +656,120 @@ iup.utils.createComponent('iup.form.CheckboxField', iup.form.Field, {
 	}
 
 });
+
+
+iup.utils.createComponent("iup.form.ButtonField", iup.form.Field, {
+	statics : {
+		type : 'buttonfield'
+	},
+	defaults : {
+		buttons : []
+	},
+	prototype : {
+		_buildEl : function(cfg) {
+			var self = this;
+		
+			var wrapper = document.createElement('div');
+			wrapper.style.position = 'relative'; 
+			
+			if (cfg.width) {
+				wrapper.style.width = cfg.width + 'px';
+			}
+			
+			var input = document.createElement('input');
+			input.name = cfg.name;
+			input.className = 'form-field';	
+			input.style.width = '100%';
+			input.setAttribute('readonly', 'readonly');
+			
+			var buttonsPanel = document.createElement('div');
+			buttonsPanel.style.position = 'absolute';
+			buttonsPanel.style.right = '1px';
+			buttonsPanel.style.top = '1px';
+			
+			var buttonsWidth = 0;
+			for (var idx = 0; idx < cfg.buttons.length; idx++) {
+				var buttonCfg = cfg.buttons[idx];
+				
+				var button = document.createElement('div');
+				$(button).attr('tabindex', '-1');
+				button.className = 'field-button ';
+				button.style.backgroundImage = 'url(' + buttonCfg.icon + ')';
+				button.onclick = buttonCfg.handler;
+				
+				//buttons.push(button);
+				buttonsPanel.appendChild(button);
+				
+				buttonsWidth += buttonCfg.width || 20;
+			}
+			input.style.paddingRight = buttonsWidth + 'px';
+			
+			wrapper.appendChild(input);
+			wrapper.appendChild(buttonsPanel);
+			
+			input.onchange = function() {
+				var val = input.value;
+				var parsedVal = typeof cfg.parser === 'function' ? cfg.parser(val, self.getField().get()) : val;
+				self.events.fireEvent("changed", parsedVal, self.getField().getOriginalValue(), true);
+			};
+			
+			self.events.on("changed", function(val, originalValue, bSilent) {
+				self.getField().set(val, bSilent);
+				self.validate();
+			});
+			
+//			if (cfg.readOnly) {
+//				self.disable();
+//			}
+			this._buttonsPanel = buttonsPanel;
+			//this._updateEl(self.getField().get());
+			
+			this._el = wrapper;
+		},
+		disable : function() {
+//			input.disabled = "disabled";
+			this.constructor.prototype.disable.call(this);
+			this._buttonsPanel.style.display = 'none';
+		},
+		enable : function() {
+//			input.disabled = "";
+			this.constructor.prototype.enable.call(this);
+			this._buttonsPanel.style.display = 'block';
+		}
+	}
+
+})
+/*iup.form.ButtonField = function(oCfg) {
+	var cfg = {
+		buttons : oCfg.buttons || []		// [{icon : "url", handler : function(){} }]
+		
+	};
+	
+	var oThis = this;
+	
+	var input;
+	var buttonsPanel;
+	var buttons = [];
+	
+	this._updateEl = function(el, val) {
+		input.value = val || '';
+	};
+	
+	this.;
+	
+	iup.form.ButtonField.superclass.constructor.call(this, oCfg);  
+	
+	this._setValid = function(isValid) {
+		if (isValid) {
+			$(input).removeClass("invalid");
+		} else {
+			$(input).addClass("invalid");
+		}
+	};
+	
+	
+};*/
+
 
 
 /*
@@ -939,7 +1063,8 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 		labelWidth 	: 100,
 		fieldWidth	: undefined,
 		rowSpace	: 5,
-		columns 	: 1
+		columns 	: 1,
+		model 		: undefined
 	},
 
 	prototype : {
@@ -967,10 +1092,18 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 					
 					var oField = null;
 					if (fieldCfg !== null) {
-						fieldCfg.width = fieldCfg.width || cfg.fieldWidth;
+						
 						if (fieldCfg instanceof iup.form.Field) {
 							oField = fieldCfg;
+							if (typeof oField.isRequired() == 'undefined') { 
+								oField.setRequired(isRequired(fieldCfg.name));
+							}
 						} else {
+							fieldCfg.width = fieldCfg.width || cfg.fieldWidth;
+							if (typeof fieldCfg.required == 'undefined') {
+								fieldCfg.required = isRequired(fieldCfg.name);
+							}
+									
 							if (fieldCfg.type) {
 								for (var key in iup.form) {
 									var construct = iup.form[key];
@@ -1009,8 +1142,21 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 					this.fields.push(oField);
 				}
 			}
-						
+			
 			this._el = table;
+			
+			function isRequired(fieldName) {
+				if (cfg.model) {
+					var fieldDefs = cfg.model.fields;
+					for (var i = 0; i < fieldDefs.length; i++) {
+						var fieldDef = fieldDefs[i];
+						if (fieldDef.name === fieldName) {
+							return fieldDef.required && fieldDef.type != 'boolean';
+						}
+					}
+				}
+				return undefined;
+			} 
 		},
 		select : function(callback) {
 			var self = this,
@@ -1060,7 +1206,6 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 					}
 				} else if (evt.keyCode === ENTER) {
 					var fieldIdx = position.col + position.row * self.cfg.columns;
-					//console.log (fieldIdx);
 					var target = self.fields[fieldIdx];
 					
 					if (target) {
@@ -1069,19 +1214,18 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 					} 
 				} else if (evt.altKey) {
 					var key = evt.key;
-					console.log(evt,key);
-					var action = self.cfg.controls[key];
-					if (action) {
-						if (action instanceof iup.Button) {
-							action.cfg.handler();
-						} else if (typeof action === "function") {
-							action();
+					if (self.cfg.controls) {
+						var action = self.cfg.controls[key];
+						if (action) {
+							if (action instanceof iup.Button) {
+								action.cfg.handler();
+							} else if (typeof action === "function") {
+								action();
+							}
 						}
+						evt.cancelBubble = true;
 					}
-					evt.cancelBubble = true;
-					
 				}
-				
 				
 				var target;
 				if (evt.keyCode === LEFT && position.col > 0) {
@@ -1094,7 +1238,7 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 					position.row++;
 				}
 				
-				itemToMark = items[position.row].children[position.col * 2 + 1];
+				var itemToMark = items[position.row].children[position.col * 2 + 1];
 				if (marked !== itemToMark) {
 					$(marked).removeClass('field-marked');
 					marked = itemToMark;
@@ -1115,45 +1259,37 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 			//skip for now
 		},
 		loadRecord : function(rec) {
-			/*for (var idx in this.fields) {
-				var field = this.fields[idx];
-				field.setField(rec.getField(field.getName()));
-			}*/
 			this._eachField(function(field) {
 				field.setField(rec.getField(field.getName()));
 			});
 			
 			this.clearInvalid();
 			this._record = rec;
-		},		
+		},
 		enable : function() {
-			/*for (var idx in this.fields) {
-				if (!this.fields[idx].isReadOnly()) {
-					this.fields[idx].enable();
-				}
-			}*/
 			this._eachField(function(field) {
-				if (field.isReadOnly()) {
+				if (!field.isReadOnly()) {
 					field.enable();
 				}
 			});
 		},		
-		clearInvalid : function() {
-			this._eachField(function(field) {
-				field.clearInvalid();
-			});
-			/*for (var idx in this.fields) {
-				this.fields[idx].clearInvalid();
-			}*/
-		},
 		disable : function() {
 			this._eachField(function(field) {
 				field.disable();
 			});
-			/*for (var idx in this.fields) {
-				this.fields[idx].disable();
-			}*/
-		},		
+		},	
+		setDisabled : function(disable) {
+			if (disable) {
+				this.disable();
+			} else {
+				this.enable();
+			}
+		},
+		clearInvalid : function() {
+			this._eachField(function(field) {
+				field.clearInvalid();
+			});
+		},
 		getRecord : function() {
 			if (!this._record) {
 				this._record = new iup.data.Record(this.getValues());
@@ -1165,10 +1301,6 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 			this._eachField(function(field) {
 				ret[field.getName()] = field.getField().get();
 			});
-			/*for (var idx in this.fields) {
-				var field = this.fields[idx];
-				ret[field.getName()] = field.getField().get();
-			}*/
 			return ret;
 		},
 		validate : function() {
@@ -1176,10 +1308,6 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 			this._eachField(function(field) {
 				ret &= field.validate();
 			});
-			/*for (var idx in this.fields) {
-				var field = this.fields[idx];
-				ret &= field.validate();
-			}*/
 			return ret;
 			
 		},
@@ -1187,50 +1315,87 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 			this._eachField(function(field) {
 				field.setValue(field.getField().getOriginalValue());
 			});
-			/*for (var idx in this.fields) {
-				var field = this.fields[idx];
-				field.setValue(field.getField().getOriginalValue());
-			}*/
+		},	
+		loadData : function(data) {
+			this._data = data;
+			var value = data;
+			if (this.cfg.root) {
+				value = findData(data, this.cfg.root.split('.'), 0);
+			}
+			
+			var record = new iup.data.Record(value, this.cfg.model);
+			this.loadRecord(record);
+			
+			function findData(root, path, idx) {
+				if (idx == path.length - 1) {
+					return root[path[idx]] || {};
+				} else {
+					var next = root[path[idx]];
+					if (next) {
+						return findData(next, path, ++idx);
+					}
+					return {};
+				}
+			}
+		},
+		isDirty : function() {
+			return this.getRecord().isDirty();
+		},
+		applyChanges : function() {
+			var root = this.cfg.root ? getRoot(this._data, this.cfg.root.split('.'), 0) : this._data;
+			
+			this.getRecord().applyChanges(root);
+			/*
+			this._eachField(function(field) {
+				root[field.getName()] = field.getField().get();
+			});*/
+			
+			function getRoot(root, path, idx) {
+				var newRoot = root[path[idx]] || (root[path[idx]] = {});
+				
+				if (idx == path.length - 1) {
+					return newRoot;
+				} else {
+					return getRoot(newRoot, path, ++idx);
+				}
+			}
+		},
+		revertChanges : function() {
+			var root = this.cfg.root ? getRoot(this._data, this.cfg.root.split('.'), 0) : this._data;
+			
+			this.getRecord().revertChanges(root);
+			/*
+			this._eachField(function(field) {
+				root[field.getName()] = field.getField().get();
+			});*/
+			
+			function getRoot(root, path, idx) {
+				var newRoot = root[path[idx]] || (root[path[idx]] = {});
+				
+				if (idx == path.length - 1) {
+					return newRoot;
+				} else {
+					return getRoot(newRoot, path, ++idx);
+				}
+			}
 		}
+		
 	}
 });
 
-/*
-iup.form.ComplexForm = function(oCfg) {
-	var cfg = {
-		fields 		: oCfg.fields, 	
-		labelWidth 	: oCfg.labelWidth,
-		fieldWidth	: oCfg.fieldWidth,
-		rowSpace	: oCfg.rowSpace,
-		content		: oCfg.content
-	};
-	
-	var record = null;
-	
-	var fieldSets = [];
-	
-	this._buildEl = function() {
-		this._items.push(cfg.content);
-		getFieldSets(cfg.content);
-		return cfg.content.getEl();
-	};
-	
-	
-	
-	iup.form.FieldSet.superclass.constructor.call(this, oCfg);  
-	
-	this.;
-	
-};*/
-
-iup.utils.createComponent('iup.form.Form', iup.form.FieldSet, function(){
+iup.utils.createComponent('iup.form.Form', iup.form.FieldSet, function() {
 	function getFieldSets(el) {
 		if (el instanceof iup.form.FieldSet) {
 			this._fieldSets.push(el);
 		} else if (el instanceof iup.form.Field) {
 			this._fields.push(el);
-		} else if (el instanceof iup.layout.Panel){
+		} /*else if (el instanceof iup.layout.TabPanel) { // TODO this shold be fixed in TabPanel
 			var items = el.cfg.content;
+			for (var i in items) {
+				getFieldSets.call(this, items[i].content);
+			}
+		}*/ else if (el instanceof iup.layout.Panel) {
+			var items = el.getChildren();//cfg.content;
 			for (var i in items) {
 				getFieldSets.call(this, items[i]);
 			}
@@ -1243,7 +1408,6 @@ iup.utils.createComponent('iup.form.Form', iup.form.FieldSet, function(){
 		},
 		prototype : {
 			_buildEl : function(cfg) {
-				//this._items.push(cfg.content);
 				this._fieldSets = [];
 				this._fields = [];
 				getFieldSets.call(this, cfg.content[0]);
@@ -1263,14 +1427,21 @@ iup.utils.createComponent('iup.form.Form', iup.form.FieldSet, function(){
 					this._fieldSets[idx].enable();
 				}
 			},
-			clearInvalid : function() {
-				for (var idx in this._fieldSets) {
-					this._fieldSets[idx].clearInvalid();
-				}
-			},
 			disable : function() {
 				for (var idx in this._fieldSets) {
 					this._fieldSets[idx].disable();
+				}
+			},
+			setDisabled : function(disable) {
+				if (disable) {
+					this.disable();
+				} else {
+					this.enable();
+				}
+			},
+			clearInvalid : function() {
+				for (var idx in this._fieldSets) {
+					this._fieldSets[idx].clearInvalid();
 				}
 			},
 			getValues : function() {
@@ -1300,6 +1471,25 @@ iup.utils.createComponent('iup.form.Form', iup.form.FieldSet, function(){
 			reset : function() {
 				for (var idx in this._fieldSets) {
 					this._fieldSets[idx].reset();
+				}
+			},
+			loadData : function(data) {
+				for (var idx in this._fieldSets) {
+					this._fieldSets[idx].loadData(data);
+				}
+				this._data = data;
+			},
+			isDirty : function() {
+				for (var idx in this._fieldSets) {
+					if (this._fieldSets[idx].isDirty()) {
+						return true;
+					}
+				}
+				return false;
+			},
+			applyChanges : function () {
+				for (var idx in this._fieldSets) {
+					this._fieldSets[idx].applyChanges();
 				}
 			}
 		}

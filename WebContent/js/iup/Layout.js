@@ -121,6 +121,15 @@ iup.utils.createComponent('iup.layout.Element', undefined,
 				empty : function() {
 					$(this.getEl()).empty();
 					//this._items.splice(0, this._items.length);
+				},
+				select : function(callback) {
+					if (this.cfg.passSelectionTo) {
+						this.cfg.passSelectionTo.select(callback);
+						return;
+					}
+				},
+				getChildren : function() {
+					return this.cfg.content;
 				}
 			}
 		});
@@ -386,6 +395,12 @@ iup.utils.createComponent('iup.layout.ScrollPanel', iup.layout.Panel,
 					iup.layout.ScrollPanel.superclass.doLayout.call(this, width, height);
 					
 					displayScroll.call(this);
+				},
+				select : function(callback) {
+					if (this.cfg.passSelectionTo) {
+						this.cfg.passSelectionTo.select(callback);
+						return;
+					}
 				}
 			}
 		}
@@ -743,6 +758,11 @@ iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel, function (
 				this.doLayout();
 			},
 			select : function(callback) {
+				if (this.cfg.passSelectionTo) {
+					console.log('passSelectionTo');
+					this.cfg.passSelectionTo.select(callback);
+					return;
+				}
 				var self = this,
 					cfg = this.cfg,
 					el = this.getEl(),
@@ -1168,6 +1188,14 @@ iup.utils.createComponent('iup.layout.TabPanel', iup.layout.Panel,
 					
 					this.disclosedItem = item;
 					item.content.doLayout($(this.content).width(), $(this.content).height());
+				},
+				getChildren : function() {
+					var ret = [];
+					var tabs = this.cfg.content;
+					for (var i = 0; i < tabs.length; i++) {
+						ret.push(tabs[i].content);
+					}
+					return ret;
 				}
 			}
 		}

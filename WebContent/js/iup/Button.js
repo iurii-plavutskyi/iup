@@ -41,9 +41,9 @@ iup.utils.createComponent('iup.Button', iup.layout.Element, function(){
 			enable : function() {
 				var cfg = this.cfg;
 				if (cfg.disabled) {
-					$(this._styleEl()).removeClass('disabled').removeAttr('disabled');
+					$(this._getStyleEl()).removeClass('disabled').removeAttr('disabled');
 					if (cfg.disabledIcon) {
-						this._styleEl().innerHTML = this.createInnerHtml(cfg.icon);
+						this._getStyleEl().innerHTML = this.createInnerHtml(cfg.icon);
 					}
 					cfg.disabled = false;
 				} 
@@ -51,9 +51,9 @@ iup.utils.createComponent('iup.Button', iup.layout.Element, function(){
 			disable : function() {
 				var cfg = this.cfg;
 				if (!cfg.disabled) {
-					$(this._styleEl()).addClass('disabled').attr('disabled', 'disabled');
+					$(this._getStyleEl()).addClass('disabled').attr('disabled', 'disabled');
 					if (cfg.disabledIcon) {
-						this._styleEl().innerHTML = this.createInnerHtml(cfg.disabledIcon);
+						this._getStyleEl().innerHTML = this.createInnerHtml(cfg.disabledIcon);
 					}
 					cfg.disabled = true;
 				}

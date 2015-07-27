@@ -2,7 +2,8 @@
 
 <head>
 <link rel="import" href="svg/save.svg" />
-<link rel="stylesheet" href="css/grid.css" />
+<link rel="stylesheet" href="css/iup.css" />
+<link rel="stylesheet" href="css/bootstrap.css" />
 <script type="text/javascript" src="js/adds/jquery-1.11.0.min.js"></script>
 <script type="text/javascript" src="js/iup/Utils.js"></script>
 <script type="text/javascript" src="js/iup/Layout.js"></script>
@@ -17,9 +18,14 @@
 <script type="text/javascript" src="js/iup/ComboBox.js"></script>
 <script type="text/javascript" src="js/iup/DateField.js"></script>
 
+
+<script type="text/javascript" src="Entities.js"></script>
+<script type="text/javascript" src="js/iup/MultiSelect.js"></script>
+
 <script type="text/javascript" src="about.js"></script>
 <script type="text/javascript" src="examples.js"></script>
 <script type="text/javascript" src="tryIt.js"></script>
+
 
 <script type="text/javascript">
 	$(document).ready( function() {
@@ -28,7 +34,7 @@
 		new iup.layout.ViewPort({
 			content : new iup.layout.TabPanel({
 				content : [
-					{title : 'About', content : new AboutPanel().getPanel()},
+					//{title : 'About', content : new AboutPanel().getPanel()},
 					{title : 'Examples', content : new ExamplesPanel().getPanel()},
 					{title : 'Try it yourself', content : new SamplesPanel().getPanel()}
 				]

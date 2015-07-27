@@ -2,20 +2,23 @@ function ExamplesPanel() {
 	
 	
 	var store = new iup.data.Store({
+		entity : Entities.Parent,
+		model : Entities.Parent,
 		data : [
-			{name:"Name1", lastName:"LastName1", birthDate : Date.parse('06/05/2005')},
-			{name:"Name2", lastName:"LastName2", birthDate : Date.parse('06/05/1985')},
-			{name:"Name3", lastName:"LastName3", birthDate : Date.parse('06/05/1995')},
-			{name:"Name4", lastName:"LastName4", birthDate : Date.parse('06/05/2000')}
+			{id : 1, name:"Name1", lastName:"LastName1", creation : Date.parse('06/05/2005')},
+			{id : 2, name:"Name2", lastName:"LastName2", creation : Date.parse('06/05/1985')},
+			{id : 3, name:"Name3", lastName:"LastName3", creation : Date.parse('06/05/1995')},
+			{id : 4, name:"Name4", lastName:"LastName4", creation : Date.parse('06/05/2000')}
 		]
 	});
 	var grid = new iup.layout.Grid({
 		columns : [
+			{header : "#", key : "id", sortable : true, width : 50, fixed : true},
 			{header : "Name", key : "name", sortable : true},
-			{header : "Last Name", key : "lastName", width : 150},
+			//{header : "Last Name", key : "lastName", width : 150},
 			{
 				header : "Age", 
-				key : "birthDate", 
+				key : "creation", 
 				width : 50, 
 				fixed : true, 
 				sortable : true,
@@ -40,16 +43,33 @@ function ExamplesPanel() {
 	var reset = new iup.Button({
 		text : 'Cancel',
 		handler : function(){
-			//editor.getRecord().rollback();
 			editor.reset();
 		}
 	})
 	
 	var editor = new iup.form.FieldSet({
+		model : Entities.Parent,
 		fields : [
+			{name : 'id', label : "ID:", readonly : true},
 			{name : 'name', label : "Name:", required : true},
-			{name : 'lastName'},
-			{name : 'birthDate', type : 'date', label : 'Birth:', showTime : true}
+			{name : 'creation', type : 'date', label : 'Creation:', showTime : true},
+			{
+				type : 'multiselect',
+				grid		: new iup.layout.Grid({
+					store : new iup.data.Store({
+						data  :[
+							{name : 'aaa'},
+							{name : 'bbb'},
+							{name : 'ccc'}
+						]
+					}),
+					columns : [{key : 'name'}],
+					selectionModel : iup.layout.Grid.SELECTION_MULTI
+				}),
+				name 		: 'children',
+				label 	 	: 'Children',
+				displayField: 'name'
+			}
 		],
 		controls : {
 			'r' : reset,
@@ -58,7 +78,7 @@ function ExamplesPanel() {
 	});
 	
 	grid.events.on('select', function(selection){
-		editor.loadRecord(selection[0].record);
+		editor.loadData(selection[0].record);
 	});
 	
 	var contentManagement = new iup.layout.BorderPanel({

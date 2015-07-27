@@ -250,7 +250,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 		title			: undefined,
 		width			: undefined,
 		height			: undefined,
-		closable		: true,
+		closable		: false,
 		modal			: true,
 		bbar			: [],
 		content			: undefined,
@@ -273,6 +273,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 			
 			this._state.closeButton = new iup.Button({
 				icon : 'svg/close.svg',
+				style : {backgroundColor : 'transparent'},
 				className	: 'window-close',
 				visible	: this.cfg.closable,
 				handler	: function() { self.hide(); }
@@ -302,7 +303,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 			this._state.win = new iup.layout.BorderPanel({
 				layoutConfig : {
 					top : 32,
-					bottom : 27
+					bottom : 33
 				},
 				top	: header,
 				bottom	: new iup.layout.StretchPanel({
@@ -477,7 +478,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 					className : 'stretch',
 					style : {
 						backgroundColor : '#fff',
-						border 			: '1px solid #369',
+						border 			: '1px solid #111',
 						borderRadius 	: '5px'
 					},
 					content : [topLeft, topMid, topRight, left, mid, right, botLeft, botMid, botRight]
@@ -602,15 +603,16 @@ iup.popup.ConfirmationWindow = function(oCfg) {
 	var title = oCfg.title;
 	var message = oCfg.message;
 	var width = oCfg.width || 300;
+	var height = oCfg.height || 80;
 	
 	var confirm = new iup.Button({
-		className	: "button save",
+		className : 'xcms-btn-default', 
 		icon		: "img/icoCheckGreen16r.png",
 		text 		: confirmButtonText
 	});
 	
 	var cancel = new iup.Button({
-		className	: "button cancel",
+		className : 'xcms-btn-default', 
 		icon		: "img/ic_cancel.png",
 		text 		: cancelButtonText
 	});
@@ -618,8 +620,9 @@ iup.popup.ConfirmationWindow = function(oCfg) {
 	var win = new iup.popup.Window({
 		title	: title,
 		closable: false,
+		height : height,
 		minWidth: 200,
-		minHeight: 70,
+		minHeight: 80,
 		content	: new iup.layout.Panel({
 			width : width,
 			content : [ 

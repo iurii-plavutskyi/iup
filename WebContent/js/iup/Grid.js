@@ -102,10 +102,10 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 				var target = event.target != null ? event.target : event.srcElement;
 				if (!$(target).hasClass('grid-expander')){
 					var cell = iup.utils.getParentCell(target);
-					eventManager.fireEvent('cellDblClick', cell, cell.column, cell.record);
+					self.events.fireEvent('cellDblClick', cell, cell.column, cell.record);
 											
 					var row = iup.utils.getParentRow(cell);
-					eventManager.fireEvent('rowDblClick', row, row.record);
+					self.events.fireEvent('rowDblClick', row, row.record);
 				}
 			}
 
@@ -156,15 +156,15 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 			var self = this;
 			asc.onclick = function(evt) {
 				var sortName = head.column.sortName || head.column.key; 
-				self.cfg.store.sort({name : sortName, direction : "asc"});
+				self.cfg.store.sort({name : sortName, descending : false});
 				self.events.fireEvent("sort", sortName, "asc");
-			}
+			};
 			
 			desc.onclick = function(evt) {
 				var sortName = head.column.sortName || head.column.key; 
-				self.cfg.store.sort({name : sortName, direction : "desc"});
+				self.cfg.store.sort({name : sortName, descending : true});
 				self.events.fireEvent("sort", sortName, "desc");
-			}
+			};
 			
 		}
 	
@@ -216,16 +216,18 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 				$(td).addClass("grid-td");
 				
 				var className = "grid-cell";
-							
+				
+				var rawValue = iup.utils.getValue(record, column.key);
+				
 				var value = typeof column.renderer == "function" 
-							? column.renderer(record.get(column.key), record, column, td) 
-									: record.get(column.key);
+							? column.renderer(rawValue, record, column, td) 
+									: rawValue;
 						
-				var dirty = record.hasField(column.key) && record.isDirty(column.key);
+			//	var dirty = record.hasField(column.key) && record.isDirty(column.key);
 				var cell = _buildCell.apply(this, [value, className]);
 				
 				td.appendChild(cell);
-				if (dirty) { $(td).addClass(' grid-dirty-value'); }
+			//	if (dirty) { $(td).addClass(' grid-dirty-value'); }
 				tr.appendChild(td);
 			};
 			return tr;
@@ -266,6 +268,7 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 		
 		function updateSortInfo() {
 			var sortOrder = this.cfg.store.getSortOrder();
+			
 			if (sortOrder) {
 				if (typeof sortOrder != "undefined") {
 					$.each(this._header.children[0].children, function(index, th) {
@@ -273,9 +276,10 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 							$(th.sort.asc).removeClass("sort_asc_selected");
 							$(th.sort.desc).removeClass("sort_desc_selected");
 							th.sort.style.display = "";
-							if (sortOrder.name == th.column.key) {
+							var sortName = th.column.sortName || th.column.key;
+							if (sortOrder.name == sortName) {
 								th.sort.style.display = "block";
-								if (sortOrder.direction == "desc") {
+								if (sortOrder.descending) {
 									$(th.sort.desc).addClass("sort_desc_selected");
 								} else {
 									$(th.sort.asc).addClass("sort_asc_selected");
@@ -495,6 +499,19 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 						//console.log (fieldIdx);
 						
 						removeSelection ();
+					} else if (evt.altKey) {
+						var key = evt.key;
+						if (self.cfg.controls) {
+							var action = self.cfg.controls[key];
+							if (action) {
+								if (action instanceof iup.Button) {
+									action.cfg.handler();
+								} else if (typeof action === "function") {
+									action();
+								}
+							}
+							evt.cancelBubble = true;
+						}
 					}
 					
 					
@@ -516,6 +533,34 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 				}
 				
 			},
+			selectRecords : function(records, additive) {
+				var self = this;
+				if (!additive) {
+					$.each(self._selectedRows, function(idx, selection){
+						$(selection).removeClass("grid-selected-row");
+					});
+					self._selectedRows.splice(0, self._selectedRows.length);
+				}
+				
+				var rows = this._body.getElementsByTagName("tr");
+				for (var j = 0; j < records.length; j++) {
+					for (var i = 0; i < rows.length; i++ ) {
+						if (rows[i].record === records[j]) {
+							var row = rows[i];
+							if (! $(row).hasClass("grid-selected-row")) {
+								$(row).addClass("grid-selected-row");
+								self._selectedRows.push(row);
+							}
+							break;
+						}
+					}
+				};
+				
+				self.events.fireEvent("select", self._selectedRows);
+			},
+			getSelectedRows : function() {
+				return this._selectedRows;
+			}
 			
 		};
 		
@@ -525,7 +570,7 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 			prototype : prototype,
 			events : events,
 			_init : function() {
-			var self = this;
+				var self = this;
 				this._selectedRows = [];
 				registerEvents.call(this);
 				
@@ -541,7 +586,7 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 				});
 				
 				this.cfg.store.on("recordChange", function(record){
-					console.log(record);
+//					console.log(record);
 					//updateRow(record);
 					_buildBody.apply(self);
 					updateSortInfo.call(self);

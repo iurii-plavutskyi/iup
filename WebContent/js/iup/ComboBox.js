@@ -1,12 +1,12 @@
 iup.utils.createComponent('iup.form.Combobox', iup.form.Field, function(){
-	function ComboboxList(oCfg, input, button, fireChanged) {
+	function ComboboxList(oCfg, input, button, fireChanged, parent) {
 		var filterStr = '';
 		var data = [];
 		var itemIdx = -1;
 		var oThis = this;
 		var shown = false;
 		
-		var store = oCfg.store
+		var store = oCfg.store;
 		
 		var div = document.createElement('div');
 		lastList = div;
@@ -17,7 +17,24 @@ iup.utils.createComponent('iup.form.Combobox', iup.form.Field, function(){
 		div.appendChild(ul);
 		
 		loadData();
-		store.on('load', loadData);
+		store.on('load', function() {
+			loadData();
+//			var val = parent.getField().get();
+//			
+//			input.value = oCfg.renderer(val);
+//			//parent.setField(parent.getField());
+//		/*	var val = parent.getField().get();
+//			console.log(val, input.value);*/
+//			var item = find(input.value);
+//			if (item === null) {
+//				input.value = oCfg.nullValue;
+//			} else {
+//				input.value = item.label;  
+//			}
+//			console.log(val, oCfg.renderer(val), item, data);
+//			fireChanged(item);
+			parent.refresh();
+		});
 		
 		document.getElementsByTagName('body')[0].appendChild(div);
 		div.style.maxHeight = '300px';
@@ -44,8 +61,8 @@ iup.utils.createComponent('iup.form.Combobox', iup.form.Field, function(){
 			var records = store.getData();
 			for (var idx = 0; idx < records.length; idx++) {
 				var item = {
-					value 	: typeof oCfg.valueField === 'function' ? oCfg.valueField(records[idx]) : records[idx].get(oCfg.valueField), 
-					label 	: typeof oCfg.displayField === 'function' ? oCfg.displayField(records[idx]) : records[idx].get(oCfg.displayField),
+					value 	: typeof oCfg.valueField === 'function' ? oCfg.valueField(records[idx]) : iup.utils.getValue(records[idx], oCfg.valueField), 
+					label 	: typeof oCfg.displayField === 'function' ? oCfg.displayField(records[idx]) : iup.utils.getValue(records[idx], oCfg.displayField),
 					visible : true
 				};
 
@@ -57,6 +74,7 @@ iup.utils.createComponent('iup.form.Combobox', iup.form.Field, function(){
 				li.record = item;
 				ul.appendChild(li);
 			}
+			
 			if (filterStr) {
 				doFilter();
 			}
@@ -76,12 +94,7 @@ iup.utils.createComponent('iup.form.Combobox', iup.form.Field, function(){
 			select(-1);
 		}
 		
-		this.filter = function(str) {
-			filterStr = str.toUpperCase();
-			doFilter();
-		};
-		
-		this.find = function(str) {
+		function find(str) {
 			var val = str.toUpperCase();
 			
 			for (var idx = 0; idx < data.length; idx ++) {
@@ -91,7 +104,14 @@ iup.utils.createComponent('iup.form.Combobox', iup.form.Field, function(){
 				}
 			}
 			return null;
+		}
+		
+		this.filter = function(str) {
+			filterStr = str.toUpperCase();
+			doFilter();
 		};
+		
+		this.find = find;
 		
 		this.selectNext = function() {
 			var list = ul.children;
@@ -295,20 +315,26 @@ iup.utils.createComponent('iup.form.Combobox', iup.form.Field, function(){
 					wrapper.style.width = oCfg.width + "px";
 				}
 				
-				input = document.createElement("input");
+				var input = document.createElement("input");
 				input.name = oCfg.name;
 				input.className = "form-field";	
 				input.style.width = '100%';
 				input.style.paddingRight = '20px';
 				
-				button = document.createElement('div');
+				var button = document.createElement('div');
 				$(button).attr('tabindex', '-1');
 				button.className = 'combo-button';
+				
+				button.innerHTML = '<span class="glyphicon glyphicon-menu-down" aria-hidden="true"></span>';/*
+				'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' + 
+					'<title>Close</title>' +
+					'<path fill="#555" d="M5,20L15,20L50,60L85,20L95,20L95,30L50,80L5,30z"/>' +
+				'</svg>';//*/
 				
 				wrapper.appendChild(input);
 				wrapper.appendChild(button);
 				
-				var list = new ComboboxList(oCfg, input, button, fireChanged);
+				var list = new ComboboxList(oCfg, input, button, fireChanged, self);
 				
 				button.onclick = function() {
 					list.filter('');
@@ -317,6 +343,7 @@ iup.utils.createComponent('iup.form.Combobox', iup.form.Field, function(){
 				};
 				
 				input.onchange = function() {
+					console.log(change);
 					setTimeout(function(){
 						if (!valueSelected) {
 							var item = list.find(input.value);
@@ -378,16 +405,17 @@ iup.utils.createComponent('iup.form.Combobox', iup.form.Field, function(){
 					self.validate();
 				});
 				
-				if (oCfg.readOnly) {
-					input.disabled = "disabled";
-					button.style.display = 'none';
-				}
+//				if (oCfg.readOnly) {
+//					input.disabled = "disabled";
+//					button.style.display = 'none';
+//				}
 				//console.log(self);
 				//list.setValue(self.getField().get());
 				
 				this._el = wrapper;
 				this._state = {
-					list : list
+					list : list,
+					button : button
 				};
 				return wrapper;
 				
@@ -399,18 +427,22 @@ iup.utils.createComponent('iup.form.Combobox', iup.form.Field, function(){
 			},
 			_setValid : function(isValid) {
 				if (isValid) {
-					$(input).removeClass("invalid");
+					$(this._getInput()).removeClass("invalid");
 				} else {
-					$(input).addClass("invalid");
+					$(this._getInput()).addClass("invalid");
 				}
 			},
 			disable : function() {
-				input.disabled = "disabled";
-				button.style.display = 'none';
+				this.constructor.superclass.disable.call(this);
+				//this._getInput().disabled = "disabled";
+				this._state.button.style.display = 'none';
+				//$(this._getInput()).addClass("disabled");
 			},
 			enable : function() {
-				input.disabled = "";
-				button.style.display = 'block';
+				this.constructor.superclass.enable.call(this);
+				//this._getInput().disabled = "";
+				this._state.button.style.display = 'block';
+				//$(this._getInput()).removeClass("disabled");
 			}
 			
 		}

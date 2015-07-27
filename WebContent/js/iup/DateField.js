@@ -4,7 +4,7 @@ iup.utils.createComponent('iup.form.DateField', iup.form.Field, function() {
 		var selectedDate;
 		var today;
 		
-		var record = new iup.data.Record({}, ['date']);
+		var record = new iup.data.Record({}, {fields : ['date']});
 		var weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 		var months = [{value : 0, label : 'January'}, {value : 1, label : 'February'}, {value : 2, label : 'March'}, 
 						{value : 3, label : 'April'}, {value : 4, label : 'May'}, {value : 5, label : 'June'}, 
@@ -373,19 +373,19 @@ iup.utils.createComponent('iup.form.DateField', iup.form.Field, function() {
 				
 				wrapper.appendChild(button);
 				
-				if (oCfg.readOnly) {
-					input.disabled = "disabled";
-					button.style.display = 'none';
-				}
+//				if (oCfg.readOnly) {
+//					input.disabled = "disabled";
+//					button.style.display = 'none';
+//				}
 				
 				//return wrapper; 
 				this._el = wrapper;
 			}
-		}, 
+		}/*, 
 		_init : function() {
 			
 			//this._updateEl(input, typeof this.cfg.renderer === 'function' ? this.cfg.renderer(oThis.getField().get()) : this.getField().get());
-		}
+		}*/
 	}
 	/*var oThis = this;
 	var input;
