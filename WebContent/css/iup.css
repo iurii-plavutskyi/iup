@@ -547,7 +547,7 @@ border-bottom : 1px solid #579;*/
 }
 
 .disabled {
-	background-color: #eee;
+	background-color: #eee !important;
 	background-image: none;
 	cursor: default;
 }
@@ -670,10 +670,10 @@ border-bottom : 1px solid #579;*/
 	position : absolute;
 	right : 1px;
 	top : 1px;
-	height : 18px;
-	width : 19px;
-	border-left : 1px solid #5384A9;
-	background :  url("../img/timedate_ena.png") no-repeat right 0px top 1px #d0d8df; 
+	bottom : 1px;
+	width : 22px;
+	border-left : 1px solid #999;
+	background :  url("../img/timedate_ena.png") no-repeat right 1px top 3px #d0d8df; 
 }
 
 .field-button {
@@ -770,11 +770,11 @@ border-bottom : 1px solid #579;*/
 .splitter{
 	position : absolute;
 //	background-color:#aaa;
-	border : 0px dotted #777;
+	border : 0px solid #999;
 } 
 
 .v-splitter{
-	width : 3px;
+	width : 5px;
 	top : 0px;
 	bottom : 0px;
 	cursor : ew-resize;
@@ -783,7 +783,7 @@ border-bottom : 1px solid #579;*/
 }
 
 .h-splitter{
-	height : 3px;
+	height : 5px;
 	left : 0px;
 	right : 0px;
 	cursor : ns-resize;

@@ -123,13 +123,13 @@ iup.utils.createComponent('iup.form.Field', iup.layout.Element, {
 				//el.setAttribute('tabIndex', '-1');
 				el.focus();
 				el.onblur = removeSelection;
-				el.onkeypress = handler;
+				el.onkeyup = handler;
 			}
 			
 			function removeSelection () {
 				$(el).removeClass('field-selected');
 				//el.removeAttribute('tabIndex');
-				el.onkeypress = undefined;
+				el.onkeyup = undefined;
 				el.onblur = undefined;
 				//$(marked).removeClass('field-marked');
 			}
@@ -265,211 +265,20 @@ iup.utils.createComponent('iup.form.Field', iup.layout.Element, {
 		
 	},
 	_init : function () {
-		this.field = this.cfg.field || new iup.data.Field(this.cfg.name, this.cfg.value);
+		this.field = this.cfg.field || new iup.data.Field({
+			name : this.cfg.name,
+			value : this.cfg.value
+		});
+		
 		this._updateEl(this._getInput(), this.cfg.renderer(this.field.get()));
 		if (this.cfg.readOnly) {
 			this.disable();
 		}
+//		if (this.cfg.value) {
+//			console.log(this.cfg.value, this.field.get(), this._getInput().value);
+//		}
 	}
 });
-
-/*iup.form.Field = function(oCfg) {	
-	//var cfg = {	// [{label:String, required:boolean, name : String, validator : function(val){}, renderer : function(val){}, parser : function(val){}}..]
-	var oThis = this;
-	
-	var label	= oCfg.label;
-	var name 		= oCfg.name;
-	var readOnly	= oCfg.readOnly;
-	var field		= oCfg.field || new iup.Field(oCfg.name, oCfg.value);
-	var required 	= oCfg.required;
-	var width 		= oCfg.width;// || 200;
-	var	regex		= oCfg.regex;
-	var placeholder = oCfg.placeholder;
-//	var style		= oCfg.style;
-//	var className	= oCfg.className;
-	var autocomplete= oCfg.autocomplete; // {store:iup.Store(), fieldName : field}
-	var renderer	= oCfg.renderer || function(val) {
-		return (typeof val == "undefined" || val == null) ? "" : val;
-	};
-	var parser	= oCfg.parser || function(val) {
-		return val;
-	};
-	var validator = oCfg.validator || function(val) {
-		return true;
-	};
-	
-	this._eventManager = new iup.EventManager({events : ["changed"]});
-	
-	this.getField = function() {
-		return field;
-	};
-	
-	this._updateEl = this._updateEl || function(el, val) {
-		el.value = val;
-	};
-	
-	this._buildEl = this._buildEl || function() {
-		var em = this._eventManager;
-		
-		var ret = document.createElement("input");
-		ret.type = 'text';
-		ret.className = "form-field";	
-		ret.style.width = width ? width + "px" : '100%';
-		this._updateEl(ret, renderer(field.get()));
-		
-		if (readOnly) {
-			ret.disabled = "disabled";
-		}
-		em.addHandler("changed", function(val, originalValue, bSilent) {
-			field.set(val, bSilent);
-			oThis.validate();
-		});
-		
-		ret.onchange = function() {
-			em.fireEvent("changed", parser(ret.value, field.get()), field.getOriginalValue(), true);
-		};
-		
-		if (placeholder) {
-			ret.placeholder = placeholder;
-		}
-		
-		if (autocomplete) {
-			var data = [];
-			
-			function fillData(aData) {
-				for (var idx in aData) {
-					var val = aData[idx].get(autocomplete.fieldName);
-					if (val && val != null) {
-						data.push({ value: val, data: '' });
-					}
-				}
-			}
-			
-			fillData(autocomplete.store.getData());
-			$(ret).autocomplete({
-		    	lookup : data,
-		    	onSelect: function (suggestion) {
-			        em.fireEvent("changed", parser(suggestion.value, field.get()), field.getOriginalValue(), true);
-			    }
-			});
-
-			autocomplete.store.on("load", function(aData) {
-				data.splice(0, data.length);
-				fillData(aData);
-				$(ret).autocomplete("option", { source: data });
-				
-			});
-			
-		}
-		
-		return ret; 
-	};
-	
-//	var input = this._buildEl();
-	
-//	if (style) {
-//		iup.appendStyle(this.getEl(), style);
-//	};
-	
-	iup.form.Field.superclass.constructor.call(this, oCfg);  
-	
-//	if (className) {
-//		$(input).addClass(className);
-//	};
-	
-	this.setValue = function(val, bSilent) {
-		this._updateEl(this.getEl(), renderer(val));
-		this._eventManager.fireEvent("changed", val, field.getOriginalValue(), bSilent);
-	};
-	
-	this.validate = function() {
-		var isValid = oThis.isValid();
-		this._setValid(isValid);
-		return isValid;
-	};
-	
-	this._setValid = function(isValid) {
-		if (isValid) {
-			$(this.getEl()).removeClass("invalid");
-		} else {
-			$(this.getEl()).addClass("invalid");
-		}
-	};
-	
-	this.setField = function(oField) {
-		field = oField || new iup.data.Field(name);
-		this._updateEl(this.getEl(), renderer(field.get()));
-	};
-	
-	this.enable = function() {
-		this.getEl().disabled = "";
-	};
-	
-	this.disable = function() {
-		this.getEl().disabled = "disabled";
-	};
-	
-	this.clearInvalid = function() {
-		$(this.getEl()).removeClass("invalid");
-	};
-	
-//	this.get = function() {
-//		return input;
-//	};
-	
-//	this.getEl = function() {
-//		return input;
-//	};
-	
-	this.getName = function() {
-		return name;
-	};
-	
-	this.isRequired = function() {
-		return required;
-	};
-	
-	this.isReadOnly = function() {
-		return readOnly;
-	};
-	
-	this.getLabel = function() {
-		return label;
-	};
-	
-	this.isValid = function() {
-		var val = field.get();
-		if (required && (typeof val == "undefined" || val == null || val.length == 0) ) {
-			return false;
-		}
-		
-		var rawVal = this._getRawValue();
-		if (regex && rawVal && !regex.test(rawVal)) {
-			return false;
-		}
-		
-		return validator(val, this._getRawValue());
-	};
-	
-	this._getRawValue = function() {
-		return this.getEl().value;
-	};
-	
-	this.setWidth = function(width) {
-		if (width > 0) {
-			this.getEl().style.width = width + 'px';
-		}
-	};
-	
-	this.on = function(eventName, handler) {
-		this._eventManager.addHandler(eventName, handler);// function (eventName, handler) {}
-	};
-};
-
-
-extend(iup.form.Field, iup.layout.Element);
-*/
-
 
 iup.utils.createComponent('iup.form.NumberField', iup.form.Field, {  
 	statics : {
@@ -606,7 +415,6 @@ iup.utils.createComponent('iup.form.CheckboxField', iup.form.Field, {
 			}
 		},
 		_buildEl : function(cfg) {
-			//var em = this._eventManager;
 			var self = this;
 			
 			var ret = document.createElement("input");
@@ -616,10 +424,6 @@ iup.utils.createComponent('iup.form.CheckboxField', iup.form.Field, {
 			if (cfg.field) {
 				this._updateEl(cfg.field.get());
 			}
-			
-//			if (cfg.readOnly) {
-//				ret.disabled = "disabled";
-//			}
 			
 			this.events.on("changed", function(val, originalValue, bSilent) {
 				self.getField().set(val, bSilent);
@@ -639,7 +443,7 @@ iup.utils.createComponent('iup.form.CheckboxField', iup.form.Field, {
 			wrapper.appendChild(text);
 			wrapper.checkbox = ret;
 			this._el = wrapper;
-			return wrapper;//ret; 
+//			return wrapper;//ret; 
 		},
 		_getRawValue : function() {
 			return this.getEl().checkbox.checked == "checked";
@@ -676,7 +480,7 @@ iup.utils.createComponent("iup.form.ButtonField", iup.form.Field, {
 				wrapper.style.width = cfg.width + 'px';
 			}
 			
-			var input = document.createElement('input');
+			input = document.createElement('input');
 			input.name = cfg.name;
 			input.className = 'form-field';	
 			input.style.width = '100%';
@@ -739,38 +543,6 @@ iup.utils.createComponent("iup.form.ButtonField", iup.form.Field, {
 	}
 
 })
-/*iup.form.ButtonField = function(oCfg) {
-	var cfg = {
-		buttons : oCfg.buttons || []		// [{icon : "url", handler : function(){} }]
-		
-	};
-	
-	var oThis = this;
-	
-	var input;
-	var buttonsPanel;
-	var buttons = [];
-	
-	this._updateEl = function(el, val) {
-		input.value = val || '';
-	};
-	
-	this.;
-	
-	iup.form.ButtonField.superclass.constructor.call(this, oCfg);  
-	
-	this._setValid = function(isValid) {
-		if (isValid) {
-			$(input).removeClass("invalid");
-		} else {
-			$(input).addClass("invalid");
-		}
-	};
-	
-	
-};*/
-
-
 
 /*
 iup.form.TextArea = function(oCfg)  {  
@@ -812,110 +584,6 @@ iup.form.TextArea = function(oCfg)  {
 };
 
 extend(iup.form.TextArea, iup.form.Field);
-
-
-
-
-
-iup.form.ButtonField = function(oCfg) {
-	var cfg = {
-		buttons : oCfg.buttons || []		// [{icon : "url", handler : function(){} }]
-		
-	};
-	
-	var oThis = this;
-	
-	var input;
-	var buttonsPanel;
-	var buttons = [];
-	
-	this._updateEl = function(el, val) {
-		input.value = val || '';
-	};
-	
-	this._buildEl = function() {
-		var em = this._eventManager;
-		
-		var wrapper = document.createElement('div');
-		wrapper.style.position = 'relative'; 
-		
-		if (oCfg.width) {
-			wrapper.style.width = oCfg.width + 'px';
-		}
-		
-		input = document.createElement('input');
-		input.name = oCfg.name;
-		input.className = 'form-field';	
-		input.style.width = '100%';
-		input.setAttribute('readonly', 'readonly');
-		
-		buttonsPanel = document.createElement('div');
-		buttonsPanel.style.position = 'absolute';
-		buttonsPanel.style.right = '1px';
-		buttonsPanel.style.top = '1px';
-		
-		var buttonsWidth = 0;
-		for (var idx = 0; idx < cfg.buttons.length; idx++) {
-			var buttonCfg = cfg.buttons[idx];
-			
-			var button = document.createElement('div');
-			$(button).attr('tabindex', '-1');
-			button.className = 'field-button ';
-			button.style.backgroundImage = 'url(' + buttonCfg.icon + ')';
-			button.onclick = buttonCfg.handler;
-			
-			buttons.push(button);
-			buttonsPanel.appendChild(button);
-			
-			buttonsWidth += buttonCfg.width || 20;
-		}
-		input.style.paddingRight = buttonsWidth + 'px';
-		
-		wrapper.appendChild(input);
-		wrapper.appendChild(buttonsPanel);
-		
-		input.onchange = function() {
-			var val = input.value;
-			var parsedVal = typeof oCfg.parser === 'function' ? oCfg.parser(val, oThis.getField().get()) : val;
-			oThis._eventManager.fireEvent("changed", parsedVal, oThis.getField().getOriginalValue(), true);
-		};
-		
-		em.addHandler("changed", function(val, originalValue, bSilent) {
-			oThis.getField().set(val, bSilent);
-			oThis.validate();
-		});
-		
-		if (oCfg.readOnly) {
-			oThis.disable();
-		}
-		
-		this._updateEl(oThis.getField().get());
-		
-		return wrapper;
-	};
-	
-	iup.form.ButtonField.superclass.constructor.call(this, oCfg);  
-	
-	this._setValid = function(isValid) {
-		if (isValid) {
-			$(input).removeClass("invalid");
-		} else {
-			$(input).addClass("invalid");
-		}
-	};
-	
-	this.disable = function() {
-		input.disabled = "disabled";
-		buttonsPanel.style.display = 'none';
-	};
-	
-	this.enable = function() {
-		input.disabled = "";
-		buttonsPanel.style.display = 'block';
-	};
-};
-
-extend(iup.form.ButtonField, iup.form.Field);
 
 iup.form.SelectMany = function(oCfg) {
 	var store = oCfg.store;
@@ -1064,7 +732,8 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 		fieldWidth	: undefined,
 		rowSpace	: 5,
 		columns 	: 1,
-		model 		: undefined
+		model 		: undefined,
+		root 		: undefined
 	},
 
 	prototype : {
@@ -1096,12 +765,12 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 						if (fieldCfg instanceof iup.form.Field) {
 							oField = fieldCfg;
 							if (typeof oField.isRequired() == 'undefined') { 
-								oField.setRequired(isRequired(fieldCfg.name));
+								oField.setRequired(isRequired(cfg.model, oField.cfg.name.split('.'), 0));
 							}
 						} else {
 							fieldCfg.width = fieldCfg.width || cfg.fieldWidth;
 							if (typeof fieldCfg.required == 'undefined') {
-								fieldCfg.required = isRequired(fieldCfg.name);
+								fieldCfg.required = isRequired(cfg.model, fieldCfg.name.split('.'), 0);
 							}
 									
 							if (fieldCfg.type) {
@@ -1145,13 +814,36 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 			
 			this._el = table;
 			
-			function isRequired(fieldName) {
+			/*function isRequired(fieldName) {
 				if (cfg.model) {
 					var fieldDefs = cfg.model.fields;
 					for (var i = 0; i < fieldDefs.length; i++) {
 						var fieldDef = fieldDefs[i];
 						if (fieldDef.name === fieldName) {
 							return fieldDef.required && fieldDef.type != 'boolean';
+						}
+					}
+				}
+				return undefined;
+			} */
+			
+			function isRequired(model, path, idx) {
+				if (model) {
+					if (!model.fields) {
+				//		console.log(model);
+						model = window[model];
+					}
+					var fieldDefs = model.fields;
+					for (var i = 0; i < fieldDefs.length; i++) {
+						var fieldDef = fieldDefs[i];
+						if (fieldDef.name === path[idx]) {
+							if (!fieldDef.required) {
+								return false;
+							} else if (path.length - 1 === idx) {
+								return fieldDef.type != 'boolean';
+							} else {
+								return isRequired(fieldDef.type, path, ++idx);
+							}
 						}
 					}
 				}
@@ -1179,14 +871,14 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 				el.setAttribute('tabIndex', '-1');
 				el.focus();
 				el.onblur = removeSelection;
-				el.onkeypress = handler;
+				el.onkeyup = handler;
 				$(marked).addClass('field-marked');
 			}
 			
 			function removeSelection () {
 				$(el).removeClass('panel-selected');
 				el.removeAttribute('tabIndex');
-				el.onkeypress = undefined;
+				el.onkeyup = undefined;
 				el.onblur = undefined;
 				$(marked).removeClass('field-marked');
 			}
@@ -1259,12 +951,16 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 			//skip for now
 		},
 		loadRecord : function(rec) {
+			this._record = rec;
+			
+			if (this.cfg.root) {
+				rec = rec.get(this.cfg.root);
+			}
 			this._eachField(function(field) {
 				field.setField(rec.getField(field.getName()));
 			});
-			
 			this.clearInvalid();
-			this._record = rec;
+			//this._record = rec;
 		},
 		enable : function() {
 			this._eachField(function(field) {
@@ -1315,7 +1011,7 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 			this._eachField(function(field) {
 				field.setValue(field.getField().getOriginalValue());
 			});
-		},	
+		}/*,	
 		loadData : function(data) {
 			this._data = data;
 			var value = data;
@@ -1345,10 +1041,6 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 			var root = this.cfg.root ? getRoot(this._data, this.cfg.root.split('.'), 0) : this._data;
 			
 			this.getRecord().applyChanges(root);
-			/*
-			this._eachField(function(field) {
-				root[field.getName()] = field.getField().get();
-			});*/
 			
 			function getRoot(root, path, idx) {
 				var newRoot = root[path[idx]] || (root[path[idx]] = {});
@@ -1364,10 +1056,6 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 			var root = this.cfg.root ? getRoot(this._data, this.cfg.root.split('.'), 0) : this._data;
 			
 			this.getRecord().revertChanges(root);
-			/*
-			this._eachField(function(field) {
-				root[field.getName()] = field.getField().get();
-			});*/
 			
 			function getRoot(root, path, idx) {
 				var newRoot = root[path[idx]] || (root[path[idx]] = {});
@@ -1378,7 +1066,7 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 					return getRoot(newRoot, path, ++idx);
 				}
 			}
-		}
+		}*/
 		
 	}
 });
@@ -1472,7 +1160,7 @@ iup.utils.createComponent('iup.form.Form', iup.form.FieldSet, function() {
 				for (var idx in this._fieldSets) {
 					this._fieldSets[idx].reset();
 				}
-			},
+			}/*,
 			loadData : function(data) {
 				for (var idx in this._fieldSets) {
 					this._fieldSets[idx].loadData(data);
@@ -1491,7 +1179,7 @@ iup.utils.createComponent('iup.form.Form', iup.form.FieldSet, function() {
 				for (var idx in this._fieldSets) {
 					this._fieldSets[idx].applyChanges();
 				}
-			}
+			}*/
 		}
 	}
 }());

@@ -4,7 +4,7 @@ iup.utils.createComponent('iup.form.DateField', iup.form.Field, function() {
 		var selectedDate;
 		var today;
 		
-		var record = new iup.data.Record({}, {fields : ['date']});
+		var record = new iup.data.Record({}, {fields : [{name : 'date'}]});
 		var weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 		var months = [{value : 0, label : 'January'}, {value : 1, label : 'February'}, {value : 2, label : 'March'}, 
 						{value : 3, label : 'April'}, {value : 4, label : 'May'}, {value : 5, label : 'June'}, 
@@ -193,8 +193,8 @@ iup.utils.createComponent('iup.form.DateField', iup.form.Field, function() {
 		
 		var ok = new iup.Button({
 			text		: 'OK',
-			className	: 'button add',
-			icon		: 'img/ic_add.png',
+			className	: 'action-button',
+			//icon		: 'img/ic_add.png',
 			visible		: cfg.showTime,
 			handler		: function() {
 				var date = record.get('date');
@@ -215,8 +215,8 @@ iup.utils.createComponent('iup.form.DateField', iup.form.Field, function() {
 		
 		var win = new iup.popup.Window({
 			title 		: cfg.label || '',
-			width 		: 260,
-			height		: cfg.showTime ? 290 : 265,
+			width 		: 270,
+			height		: cfg.showTime ? 320 : 295,
 			resizeModel : 'none',
 			content		: form,
 			bbar		: ['->', ok]
@@ -306,7 +306,7 @@ iup.utils.createComponent('iup.form.DateField', iup.form.Field, function() {
 			}
 			
 			win.show();
-			
+			var input = dateField._getInput();
 			var inputOffset = $(input).offset();
 			inputOffset.top += $(input).outerHeight();
 			$(win.getEl()).offset(inputOffset);
@@ -318,10 +318,10 @@ iup.utils.createComponent('iup.form.DateField', iup.form.Field, function() {
 			showTime : false,
 			regex : cfg. showTime ? /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$/ : /^\d{2}\/\d{2}\/\d{4}$/,
 			renderer : function(val) {
-				return iup.utils.convertDate(val, cfg.showTime || false);
+				return iup.utils.convertDate(Date.parse(val), cfg.showTime || false);
 			},
 			parser :  function(val, fieldValue) {
-				return Date.parse(val);
+				return new Date(val).toISOString();
 			}
 		}
 	};
@@ -332,7 +332,7 @@ iup.utils.createComponent('iup.form.DateField', iup.form.Field, function() {
 		defaults : defaults,
 		prototype : {
 			_buildEl : function(oCfg) {
-			console.log(oCfg);
+			//console.log(oCfg);
 				//var em = this._eventManager;
 				var self = this;
 				

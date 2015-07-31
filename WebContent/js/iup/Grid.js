@@ -171,14 +171,15 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 		function _buildBody() {
 			var cfg = this.cfg;
 			$(this._body).empty();
-			var data = cfg.store.getData();
+			var data = cfg.store ? cfg.store.getData() : [];
 
 			if (data.length > 0){
 				var striped = false;
+				var index = 0;
 				for(var rowIdx = 0; rowIdx < data.length; rowIdx++){
 					var record = data[rowIdx];
 					if (cfg.filter(record)) {
-						var tr = _buildRow.apply(this, [record] );
+						var tr = _buildRow.apply(this, [record, index++]);
 						if (cfg.stripedRows && striped) {
 							$(tr).addClass("striped-row");
 						}
@@ -199,7 +200,7 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 				}
 			}
 		}
-		function _buildRow(record ){ 
+		function _buildRow(record, index){ 
 			var cfg = this.cfg;
 			var tr = document.createElement("tr");
 			if (cfg.selectionModel != iup.layout.Grid.SELECTION_NONE) {
@@ -217,10 +218,10 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 				
 				var className = "grid-cell";
 				
-				var rawValue = iup.utils.getValue(record, column.key);
+				var rawValue = column.key ? record.get(column.key) : undefined;
 				
 				var value = typeof column.renderer == "function" 
-							? column.renderer(rawValue, record, column, td) 
+							? column.renderer(rawValue, record, column, td, index) 
 									: rawValue;
 						
 			//	var dirty = record.hasField(column.key) && record.isDirty(column.key);
@@ -334,6 +335,45 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 			
 			lastResizableColumn.calculatedWidth = width - fixedWidth - allocatedWidth + lastResizableColumn.calculatedWidth;
 		}
+		
+		function setStore(store) {
+			var self = this;
+			//if (this.cfg.store !== store) {	
+				if (this.cfg.store) {
+					//remove events
+					this.cfg.store.events.removeHandler('loadStarted', loadStartHandler);
+					this.cfg.store.events.removeHandler('load', loadHandler);
+					this.cfg.store.events.removeHandler("recordChange", recordChangeHandler);
+				}
+				this.cfg.store = store;
+				
+				if (store) {
+					store.on('loadStarted', loadStartHandler);
+					store.on('load', loadHandler);
+					store.on("recordChange", recordChangeHandler);
+				}
+				
+				
+		//	}
+			_buildBody.apply(this);
+			
+			function loadStartHandler() {
+				self._bodyWraper.mask(true);
+			}
+			function loadHandler() {
+				self._bodyWraper.mask(false);
+				_buildBody.apply(self);
+				updateSortInfo.call(self);
+				self.doLayout();
+			}
+			function recordChangeHandler(record){
+//				console.log(record);
+				//updateRow(record);
+				_buildBody.apply(self);
+				updateSortInfo.call(self);
+				self.doLayout();
+			}
+		}
 
 		var statics = {
 			SELECTION_NONE : "none",
@@ -354,7 +394,7 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 			style					: undefined,
 			stripedRows				: true
 		},
-		events = ['sort', 'cellClick', 'rowClick', 'headerClick', 'cellDblClick', 'rowDblClick', 'select'],
+		events = ['sort', 'cellClick', 'rowClick', 'headerClick', 'cellDblClick', 'rowDblClick', 'select', 'rowactivate'],
 		prototype = {
 			_buildEl : function(cfg) {
 				this._headerColGroup = buildColGroup();
@@ -396,7 +436,7 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 				});
 				
 				_buildHeader.apply(this);
-				_buildBody.apply(this);
+				//_buildBody.apply(this);
 				function buildColGroup() {
 					var columns = cfg.columns;
 					var colGroup = document.createElement('colgroup');
@@ -560,6 +600,12 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 			},
 			getSelectedRows : function() {
 				return this._selectedRows;
+			},
+			setStore : function(store) {
+				setStore.call(this, store);
+			},
+			getStore : function() {
+				return this.cfg.store;
 			}
 			
 		};
@@ -574,24 +620,7 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 				this._selectedRows = [];
 				registerEvents.call(this);
 				
-				this.cfg.store.on('loadStarted', function() {
-					self._bodyWraper.mask(true);
-				});
-				
-				this.cfg.store.on('load', function() {
-					self._bodyWraper.mask(false);
-					_buildBody.apply(self);
-					updateSortInfo.call(self);
-					self.doLayout();
-				});
-				
-				this.cfg.store.on("recordChange", function(record){
-//					console.log(record);
-					//updateRow(record);
-					_buildBody.apply(self);
-					updateSortInfo.call(self);
-					self.doLayout();
-				});
+				setStore.call(this, this.cfg.store);
 				
 				/*if (!cfg.fixedColumns) {
 					addColumnResizability();

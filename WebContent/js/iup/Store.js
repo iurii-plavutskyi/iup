@@ -311,7 +311,6 @@ iup.data.Record = function(oRecord, model){
 	var aFields = [];
 	
 	if (model) {
-	//console.log(model);
 		for (var i = 0; i < model.fields.length; i++) {
 			aFields.push(model.fields[i].name);
 		}
@@ -531,4 +530,3 @@ iup.data.Field = function(sName, oValue){
 		eventManager.addHandler(eventName, handler);
 	};
 };
-

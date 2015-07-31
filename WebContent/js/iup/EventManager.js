@@ -26,5 +26,11 @@ iup.EventManager = function(oCfg){
 			this.addHandler(idx, oHandlers[idx]);
 		}
 	};
+	this.removeHandler = function (eventName, handler) {
+		var idx = this[eventName].indexOf(handler);
+		if (idx > -1) {
+			this[eventName].splice(idx,1);
+		} 
+	};
 	this.on = this.addHandler;
 };

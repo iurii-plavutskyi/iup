@@ -830,7 +830,7 @@ iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel, function (
 					el.setAttribute('tabIndex', '-1');
 					el.focus();
 					el.onblur = removeSelection;
-					el.onkeypress = handler;
+					el.onkeyup = handler;
 					
 					$(marked).addClass('panel-marked');
 				}
@@ -838,7 +838,7 @@ iup.utils.createComponent('iup.layout.BorderPanel', iup.layout.Panel, function (
 				function removeSelection () {
 					$(el).removeClass('panel-selected');
 					el.removeAttribute('tabIndex');
-					el.onkeypress = undefined;
+					el.onkeyup = undefined;
 					el.onblur = undefined;
 					$(marked).removeClass('panel-marked');
 				}
@@ -1113,14 +1113,14 @@ iup.utils.createComponent('iup.layout.TabPanel', iup.layout.Panel,
 						el.setAttribute('tabIndex', '-1');
 						el.focus();
 						el.onblur = removeSelection;
-						el.onkeypress = handler;
+						el.onkeyup = handler;
 						$(marked).addClass('panel-marked');
 					}
 					
 					function removeSelection () {
 						$(el).removeClass('panel-selected');
 						el.removeAttribute('tabIndex');
-						el.onkeypress = undefined;
+						el.onkeyup = undefined;
 						el.onblur = undefined;
 						$(marked).removeClass('panel-marked');
 					}
@@ -1283,7 +1283,7 @@ iup.utils.createComponent('iup.layout.ViewPort', iup.layout.StretchPanel, {
 			self.doLayout(x, y);
 		};
 		
-		window.onkeypress = function (evt) {
+		window.onkeyup = function (evt) {
 			if (evt.keyCode === 13 && evt.altKey) {
 				self.cfg.content[0].select();
 			}

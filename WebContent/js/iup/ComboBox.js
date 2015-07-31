@@ -61,8 +61,8 @@ iup.utils.createComponent('iup.form.Combobox', iup.form.Field, function(){
 			var records = store.getData();
 			for (var idx = 0; idx < records.length; idx++) {
 				var item = {
-					value 	: typeof oCfg.valueField === 'function' ? oCfg.valueField(records[idx]) : iup.utils.getValue(records[idx], oCfg.valueField), 
-					label 	: typeof oCfg.displayField === 'function' ? oCfg.displayField(records[idx]) : iup.utils.getValue(records[idx], oCfg.displayField),
+					value 	: typeof oCfg.valueField === 'function' ? oCfg.valueField(records[idx]) : records[idx].get(oCfg.valueField), 
+					label 	: typeof oCfg.displayField === 'function' ? oCfg.displayField(records[idx]) : records[idx].get(oCfg.displayField),
 					visible : true
 				};
 
@@ -343,7 +343,7 @@ iup.utils.createComponent('iup.form.Combobox', iup.form.Field, function(){
 				};
 				
 				input.onchange = function() {
-					console.log(change);
+//					console.log(change);
 					setTimeout(function(){
 						if (!valueSelected) {
 							var item = list.find(input.value);

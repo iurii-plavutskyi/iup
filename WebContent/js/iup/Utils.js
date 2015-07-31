@@ -283,40 +283,30 @@ iup.utils.createEl = function(tag, oCfg) {
 	return el;
 };
 
-iup.utils.getValue = function (root, key) {
-	if (root === null || typeof root == 'undefined') {
+/*iup.utils.getValue = function (record, key) {
+	if (record === null || typeof record == 'undefined') {
 		return undefined;
 	}
 	
 	if (key.indexOf('.') > -1) {
-		return getByPath(key);
+		return findValue(record, key.split('.'));
 	}
 	
-	return root[key];
+	return record.get(key);
 	
-	function getByPath(key) {
-		var split = key.split('.');
-		var data = root[split[0]];
-		
-		if (data === null || data === undefined) {
-			return null;
-		} 
-		var val = findValue(data, split, 1);
-		return val;
-	}
-	
-	function findValue(data, path, idx) {
+	function findValue(record, path, idx) {
+		idx || (idx = 0);
 		var keyName = path[idx];
-		var val = data[keyName];
+		var val = record.get(keyName);
 		if (val === null || val === undefined) {
 			return null;
 		} 
 		if (idx === path.length - 1) {
-			return val;
+			return val;//.value();
 		} 
 		return findValue(val, path, ++idx);
 	}
-};
+};*/
 
 /*
 function setValue(data, path, idx, value) {
