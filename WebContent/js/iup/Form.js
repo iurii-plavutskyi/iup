@@ -11,12 +11,75 @@ iup.utils.createComponent('iup.form.Label', iup.layout.Element, {
 			this._el = span;
 		},
 		setText : function(text) {
-			span.innerHTML = text;
+			this._el.innerHTML = text;
 		}
 	}
-})
+});
 
-iup.utils.createComponent('iup.form.Field', iup.layout.Element, {	
+iup.utils.createComponent('iup.form.Field', iup.layout.Element, function() {
+	function Tooltip(oCfg) {
+		var cfg = {
+			position : oCfg.position || 'right',
+			bindTo : oCfg.bindTo,
+			title : oCfg.title
+		};
+		var el;
+		
+		initTooltip();
+		
+		function buildTooltip() {
+			return iup.utils.createEl("div", {
+		//		className : 'tooltip'
+			});
+		}
+		
+		function initTooltip() {
+			el || (el = buildTooltip());
+			
+			var type = cfg.validationMessage ? 'error' : 'info';
+			var message = cfg.validationMessage || cfg.title;
+			el.className = type === 'error' ? 'tooltip-error' : 'tooltip-info';
+			el.innerHTML = message;
+			if (message) {
+				cfg.bindTo.onmouseenter = function() {
+					showTooltip();
+				};
+				cfg.bindTo.onmouseleave = function() {
+					hideTooltip();
+				};
+			} else {
+				hideTooltip();
+				cfg.bindTo.onmouseenter = null;
+				cfg.bindTo.onmouseleave = null;
+			}
+		}
+		
+		function showTooltip() {
+			var offset = $(cfg.bindTo).offset();
+			el.style.top = offset.top + 'px';
+			el.style.left = offset.left + $(cfg.bindTo).width() + 12 + 'px';
+			
+			document.getElementsByTagName('body')[0].appendChild(el);
+		}
+		
+		function hideTooltip() {
+			if (el.parentNode) {
+				el.parentNode.removeChild(el);
+			}
+		}
+		
+		this.setValidationMessage = function(message) {
+			cfg.validationMessage = message;
+			initTooltip();
+		};
+	}
+	
+return {	
+	/*
+	 
+	 */
+	
+	
 	//var cfg = {	// [{label:String, required:boolean, name : String, validator : function(val){}, renderer : function(val){}, parser : function(val){}}..]
 	/*statics : {
 		type : 'field',
@@ -30,11 +93,13 @@ iup.utils.createComponent('iup.form.Field', iup.layout.Element, {
 		width 		: undefined,// || 200;
 		regex		: undefined,
 		placeholder : undefined,
+		detached	: undefined,
+		value		: undefined,
 	//	var style		= oCfg.style;
 	//	var className	= oCfg.className;
 		//autocomplete: oCfg.autocomplete, // {store:iup.Store(), fieldName : field}
 		renderer	: function(val) {
-			return (typeof val == "undefined" || val == null) ? "" : val;
+			return (typeof val === "undefined" || val === null) ? "" : val;
 		},
 		parser	: function(val) {
 			return val;
@@ -47,17 +112,12 @@ iup.utils.createComponent('iup.form.Field', iup.layout.Element, {
 	prototype : {
 		_buildEl : function(cfg) {
 			var self = this;
-			//this.field = cfg.field || new iup.Field(cfg.name, cfg.value);
 			
 			var ret = document.createElement("input");
 			ret.type = 'text';
 			ret.className = "form-field";	
 			ret.style.width = cfg.width ? cfg.width + "px" : '100%';
-			
-//			if (cfg.readOnly) {
-//				ret.disabled = "disabled";
-//			}
-			
+
 			this.events.on("changed", function(val, originalValue, bSilent) {
 				self.field.set(val, bSilent);
 				self.validate();
@@ -70,35 +130,6 @@ iup.utils.createComponent('iup.form.Field', iup.layout.Element, {
 			if (cfg.placeholder) {
 				ret.placeholder = cfg.placeholder;
 			}
-			
-			/*if (cfg.autocomplete) {
-				var data = [];
-				
-				function fillData(aData) {
-					for (var idx in aData) {
-						var val = aData[idx].get(cfg.autocomplete.fieldName);
-						if (val && val != null) {
-							data.push({ value: val, data: '' });
-						}
-					}
-				}
-				
-				fillData(cfg.autocomplete.store.getData());
-				$(ret).autocomplete({
-					lookup : data,
-					onSelect: function (suggestion) {
-						em.fireEvent("changed", parser(suggestion.value, field.get()), field.getOriginalValue(), true);
-					}
-				});
-
-				cfg.autocomplete.store.on("load", function(aData) {
-					data.splice(0, data.length);
-					fillData(aData);
-					$(ret).autocomplete("option", { source: data });
-					
-				});
-				
-			}*/
 			
 			this._el = ret;
 			return ret; 
@@ -138,7 +169,7 @@ iup.utils.createComponent('iup.form.Field', iup.layout.Element, {
 			
 			function handler(evt) {
 				if (evt.keyCode === ESC) {
-					removeSelection ()
+					removeSelection ();
 					if (typeof callback == "function") {
 						setTimeout(function() {
 							callback();
@@ -183,12 +214,20 @@ iup.utils.createComponent('iup.form.Field', iup.layout.Element, {
 		getField : function() {
 			return this.field;
 		},
+		focus : function() {
+			this._getInput().focus();
+		},
 		_updateEl :  function(el, val) {
 			el.value = val;
+		//	this._textHolder.innerHTML = val;
 		},
 		setValue : function(val, bSilent) {
 			this._updateEl(this._getInput(), this.cfg.renderer(val));
+//			this._textHolder.innerHTML =  this.cfg.renderer(val);
 			this.events.fireEvent("changed", val, this.field.getOriginalValue(), bSilent);
+		},
+		getValue : function() {
+			return this.getField().get();
 		},
 		validate : function() {
 			var isValid = this.isValid();
@@ -197,7 +236,8 @@ iup.utils.createComponent('iup.form.Field', iup.layout.Element, {
 		},
 		_setValid : function(isValid) {
 			if (isValid) {
-				$(this._getInput()).removeClass("invalid");
+				this.clearInvalid();
+				//$(this._getInput()).removeClass("invalid");
 			} else {
 				$(this._getInput()).addClass("invalid");
 			}
@@ -208,17 +248,27 @@ iup.utils.createComponent('iup.form.Field', iup.layout.Element, {
 		},
 		refresh : function() {
 			this._updateEl(this._getInput(), this.cfg.renderer(this.field.get()));
+//			this._textHolder.innerHTML =  this.cfg.renderer(this.field.get());
 		}, 
 		enable : function() {
-			this._getInput().disabled = "";
+			//this._textHolder.style.display = 'none';
+			//this._getInput().style.display = 'inline';
+			this._getInput().removeAttribute("readonly");//disabled = "";
 			$(this._getInput()).removeClass("disabled");
+			this.cfg.disabled = false;
 		},
 		disable : function() {
-			this._getInput().disabled = "disabled";
+			//this._textHolder.innerHTML = this._getInput().value;
+			//this._textHolder.style.display = 'block';
+		//	this._getInput().style.display = 'none';
+			
+			this._getInput().setAttribute("readonly", "readonly");
 			$(this._getInput()).addClass("disabled");
+			this.cfg.disabled = true;
 		},
 		clearInvalid : function() {
 			$(this._getInput()).removeClass("invalid");
+			this._tooltip.setValidationMessage.call(null);
 		},
 		getName : function() {
 			return this.cfg.name;
@@ -237,16 +287,30 @@ iup.utils.createComponent('iup.form.Field', iup.layout.Element, {
 		},
 		isValid : function() {
 			var val = this.field.get();
-			if (this.cfg.required && (typeof val == "undefined" || val == null || val.length == 0) ) {
+			
+			var required = this.cfg.required && !this.cfg.disabled && !this.cfg.readOnly;
+			if (required && (typeof val === "undefined" || val === null || val.length === 0) ) {
+				//showTooltip.call(this, {type : "error", message : "This field is Required"}, 3000);
+				//setValidationMessage.call(this, "This field is Required");
+				this._tooltip.setValidationMessage("This field is Required");
 				return false;
 			}
 			
 			var rawVal = this._getRawValue();
 			if (this.cfg.regex && rawVal && !this.cfg.regex.test(rawVal)) {
+				//showTooltip.call(this, {type : "error", message : "Wrong format"}, 3000);
+				//setValidationMessage.call(this, "Wrong format");
+				this._tooltip.setValidationMessage("Wrong format");
 				return false;
 			}
 			
-			return this.cfg.validator(val, this._getRawValue());
+			var valid = this.cfg.validator(val, this._getRawValue());
+			if (typeof valid === "string") {
+				//setValidationMessage.call(this, valid);
+				this._tooltip.setValidationMessage(valid);
+				valid = false;
+			}
+			return valid;
 		},
 		_getRawValue : function() {
 			return this._getInput().value;
@@ -265,18 +329,87 @@ iup.utils.createComponent('iup.form.Field', iup.layout.Element, {
 		
 	},
 	_init : function () {
-		this.field = this.cfg.field || new iup.data.Field({
-			name : this.cfg.name,
-			value : this.cfg.value
+		var cfg = this.cfg;
+		var self = this;
+		//var wrapper = document.createElement('div');
+		//wrapper.appendChild(this._el);
+		//this._el = wrapper;
+		
+		//this._textHolder = iup.utils.createEl('div', {style : {display : 'none'}});
+		//wrapper.appendChild(this._textHolder);
+		
+		this.field = cfg.field || new iup.data.Field({
+			name : cfg.name,
+			value : cfg.value
 		});
 		
-		this._updateEl(this._getInput(), this.cfg.renderer(this.field.get()));
-		if (this.cfg.readOnly) {
+		this._updateEl(this._getInput(), cfg.renderer(this.field.get()));
+		//this._textHolder.innerHTML =  cfg.renderer(this.field.get());
+		
+		
+		if (cfg.readOnly) {
 			this.disable();
 		}
+		
+		this._tooltip = new Tooltip({
+			bindTo : this._el,
+			title : cfg.title
+		});
 //		if (this.cfg.value) {
 //			console.log(this.cfg.value, this.field.get(), this._getInput().value);
 //		}
+		
+		/*if (cfg.title) {
+			var mouseEnter = false;
+			
+			self._el.onmouseenter = function() {
+				showTooltip.call(self, {message : cfg.title});
+			}
+			self._el.onmouseleave = function() {
+				hideTooltip.call(self);
+			}
+		}*/
+	}
+};}());
+
+iup.utils.createComponent('iup.form.TextArea', iup.form.Field, { 
+	statics : {
+		type : 'textarea'
+	},
+	prototype : {
+		_buildEl : function(cfg) {
+			var self = this;
+			
+			var ret = document.createElement("textarea");
+			//ret.type = 'password';
+			ret.className = "form-field";	
+			ret.style.width = cfg.width ? cfg.width + "px" : '100%';
+
+			this.events.on("changed", function(val, originalValue, bSilent) {
+				self.field.set(val, bSilent);
+				self.validate();
+			});
+			
+			ret.onchange = function() {
+				self.events.fireEvent("changed", cfg.parser(ret.value, self.field.get()), self.field.getOriginalValue(), true);
+			};
+			
+			if (cfg.placeholder) {
+				ret.placeholder = cfg.placeholder;
+			}
+			
+			this._el = ret;
+			return ret; 
+		},
+		_getInput : function() {
+			//console.log(this.getEl());
+			//return $(this.getEl()).find('TEXTAREA')[0];
+			return this.getEl();
+			/*if (this.getEl().tagName === 'TEXTAREA') {
+				return this.getEl();
+			} 
+			return $(this.getEl()).find('TEXTAREA')[0];*/
+		}
 	}
 });
 
@@ -299,7 +432,39 @@ iup.utils.createComponent('iup.form.NumberField', iup.form.Field, {
 			}*/
 		}
 	}
-})
+});
+
+iup.utils.createComponent('iup.form.Password', iup.form.Field, { 
+	statics : {
+		type : 'password'
+	},
+	prototype : {
+		_buildEl : function(cfg) {
+			var self = this;
+			
+			var ret = document.createElement("input");
+			ret.type = 'password';
+			ret.className = "form-field";	
+			ret.style.width = cfg.width ? cfg.width + "px" : '100%';
+
+			this.events.on("changed", function(val, originalValue, bSilent) {
+				self.field.set(val, bSilent);
+				self.validate();
+			});
+			
+			ret.onchange = function() {
+				self.events.fireEvent("changed", cfg.parser(ret.value, self.field.get()), self.field.getOriginalValue(), true);
+			};
+			
+			if (cfg.placeholder) {
+				ret.placeholder = cfg.placeholder;
+			}
+			
+			this._el = ret;
+			return ret; 
+		}
+	}
+});
 
 iup.utils.createComponent('iup.form.Spinbox', iup.form.NumberField, { 
 	statics : {
@@ -387,7 +552,7 @@ iup.utils.createComponent('iup.form.Spinbox', iup.form.NumberField, {
 			wrapper.appendChild(buttonsDiv);
 			this._state = {
 				buttonsDiv : buttonsDiv
-			}
+			};
 			this._el = wrapper;
 			return wrapper; 
 		},
@@ -413,6 +578,7 @@ iup.utils.createComponent('iup.form.CheckboxField', iup.form.Field, {
 			} else {
 				el.checked = "";
 			}
+		//	this._textHolder.className = val ? "checkbox-checked" : "checkbox-unchecked";
 		},
 		_buildEl : function(cfg) {
 			var self = this;
@@ -435,27 +601,44 @@ iup.utils.createComponent('iup.form.CheckboxField', iup.form.Field, {
 				self.events.fireEvent("changed", val, self.getField().getOriginalValue(), true);
 			};
 			
-			var wrapper = document.createElement("div");
-			wrapper.appendChild(ret);
-			var text = document.createElement("span");
-			text.style.marginLeft = "10px";
-			text.innerHTML = cfg.text || "";
-			wrapper.appendChild(text);
-			wrapper.checkbox = ret;
-			this._el = wrapper;
+//			var wrapper = document.createElement("div");
+//			wrapper.appendChild(ret);
+//			var text = document.createElement("span");
+//			text.style.marginLeft = "10px";
+//			text.innerHTML = cfg.text || "";
+//			wrapper.appendChild(text);
+//			wrapper.checkbox = ret;
+//			wrapper.style.display = 'inline';
+			this._el = ret;
 //			return wrapper;//ret; 
 		},
 		_getRawValue : function() {
-			return this.getEl().checkbox.checked == "checked";
+			return this._getInput().checked == "checked";
 		},
-		enable : function() {
+		/*enable : function() {
 			this.getEl().checkbox.disabled = "";
 		},
 		disable : function() {
 			this.getEl().checkbox.disabled = "disabled";
-		},
+		},*/
 		updateEl : function(el, val) {
 			el.value = val;
+		},
+		enable : function() {
+			//this._textHolder.style.display = 'none';
+			//this._getInput().style.display = 'inline';
+			this._getInput().removeAttribute("disabled");//disabled = "";
+			$(this._getInput()).removeClass("disabled");
+			this.cfg.disabled = false;
+		},
+		disable : function() {
+			//this._textHolder.innerHTML = this._getInput().value;
+			//this._textHolder.style.display = 'block';
+		//	this._getInput().style.display = 'none';
+			
+			this._getInput().setAttribute("disabled", "disabled");
+			$(this._getInput()).addClass("disabled");
+			this.cfg.disabled = true;
 		}
 	}
 
@@ -480,7 +663,7 @@ iup.utils.createComponent("iup.form.ButtonField", iup.form.Field, {
 				wrapper.style.width = cfg.width + 'px';
 			}
 			
-			input = document.createElement('input');
+			var input = document.createElement('input');
 			input.name = cfg.name;
 			input.className = 'form-field';	
 			input.style.width = '100%';
@@ -542,193 +725,280 @@ iup.utils.createComponent("iup.form.ButtonField", iup.form.Field, {
 		}
 	}
 
-})
+});
 
-/*
-iup.form.TextArea = function(oCfg)  {  
-	this._updateEl = function(el, val) {
-		el.value = val;
-	};
-	var cfg = {
-		parser		: oCfg.parser || function(val) {return val;}
-	};
-	
-	this._buildEl = function() {
-		var em = this._eventManager;
-		var oThis = this;
-		
-		var input = document.createElement("textarea");
-		input.style.width = oCfg.width ? oCfg.width + "px" : '100%';
-		input.style.height = oCfg.height + "px";
-		input.className = "form-field"; 
-		
-		if (oCfg.readOnly) {
-			input.disabled = "disabled";
+
+
+/*iup.utils.createComponent('iup.form.TextArea', iup.form.Field, {
+	statics : {
+		type : 'textarea'
+	},
+	prototype : {
+		_buildEl : function(cfg) {
+			var self = this;
+			
+			var input = iup.utils.createEl("textarea", {
+				className : "form-field"
+			});
+			//input.className = "form-field"; 
+			
+//			em.addHandler("changed", function(val, originalValue, bSilent) {
+//				oThis.getField().set(val, bSilent);
+//				oThis.validate();
+//			});
+//			
+//			
+			input.onchange = function() {
+				var val = ret.checked;
+				self.events.fireEvent("changed", val, self.getField().getOriginalValue(), true);
+			};
+			
+			this._el = input;
+		},
+		_getInput : function() {
+			var area = $(this.getEl()).find('TEXTAREA')[0];
+			console.log(area);
+			return area;
+		}
+	}
+
+});*/
+
+iup.utils.createComponent('iup.form.SelectMany', iup.form.Field, function() {
+	function updateTables() {
+		var _this = this, 
+			cfg = _this.cfg,
+			availableItems = _this._getStyleEl().children[0], 
+			selectedItems = _this._getStyleEl().children[1];
+		availableItems.innerHTML = '';
+		selectedItems.innerHTML = '';
+		var data = cfg.store.getData();
+		var selectedValues = _this.getField() && _this.getValue();
+		if (selectedValues instanceof iup.data.Store) {
+			selectedValues = selectedValues.getRawData();
+		}
+		for (var i = 0, n = data.length; i < n; i++) {
+			
+			var div = iup.utils.createEl('div', {
+				content : getLabel(data[i])
+			});
+			
+			div.ondblclick = dblClickHandler;
+			div.value = getValue(data[i]);
+			
+			if (recordSelected(data[i], selectedValues)) {
+				selectedItems.appendChild(div);
+				div.isSelected = true;
+			} else {
+				availableItems.appendChild(div);
+				div.isSelected = false;
+			}
 		}
 		
-		em.addHandler("changed", function(val, originalValue, bSilent) {
-			oThis.getField().set(val, bSilent);
-			oThis.validate();
-		});
-		
-		
-		input.onchange = function() {
-			var val = input.value;
-			em.fireEvent("changed", val == null ? null : cfg.parser(val), oThis.getField().getOriginalValue(), true);
-		};
-		
-		return input;
-	};
-	
-	iup.form.TextArea.superclass.constructor.call(this, oCfg);  
-};
+		function dblClickHandler(evt) {
+			var div = this;
 
-extend(iup.form.TextArea, iup.form.Field);
-
-iup.form.SelectMany = function(oCfg) {
-	var store = oCfg.store;
-	var areEqual = oCfg.areEqual;
-	var converter = oCfg.converter;
-	var displayField = oCfg.displayField;
-	var oThis = this;
-	var columnWidth = (oCfg.width - 30) / 2;
-	
-	this._updateEl = function(el, val) {
-		
-	};
-	this._buildEl = function() {
-		var em = this._eventManager;
-		
-		var table = document.createElement("table");
-		table.style.width = oCfg.width + "px;";
-		var tableBody = document.createElement("tbody");
-		table.appendChild(tableBody);
-		var tr = document.createElement("tr");
-		tableBody.appendChild(tr);
-		
-		var availableItemsTd = document.createElement("td");
-		tr.appendChild(availableItemsTd);
-		var buttonsPanel = document.createElement("td");
-		tr.appendChild(buttonsPanel);
-		var selectedItemsTd = document.createElement("td");
-		tr.appendChild(selectedItemsTd);
-		
-		addButtons(buttonsPanel);
-		
-		var availableItems = createTable();
-		availableItemsTd.appendChild(availableItems);
-		var selectedItems = createTable();
-		selectedItemsTd.appendChild(selectedItems);
-		
-		updateTables(availableItems.body, selectedItems.body);
-		
-		store.on("load", function() {
-			updateTables(availableItems.body, selectedItems.body);
-		});
-
-		return table;
-	};
-	
-	function addButtons(td) {
-		var selectAll = createButton(">>");
-		var selectMarked = createButton(">");
-		var removeMarked = createButton("<");
-		var removeAll = createButton("<<");
-		
-		td.style.verticalAlign = "middle";
-		
-		var table = document.createElement("table");
-		td.appendChild(table);
-		
-		var body = document.createElement("tbody");
-		table.appendChild(body);
-		body.appendChild(selectAll);
-		body.appendChild(selectMarked);
-		body.appendChild(removeMarked);
-		body.appendChild(removeAll);
-	}
-	
-	function createButton(html) {
-		var tr = document.createElement("tr");
-		var td = document.createElement("td");
-		tr.appendChild(td);
-		
-		var button = document.createElement("button");
-		button.style.width = "25px";
-		button.innerHTML = html;
-		
-		td.appendChild(button);
-		return tr;
-	}
-	
-	function createTable() {
-		var wrapper = document.createElement("div");
-		with (wrapper.style) {
-			height = oCfg.height + "px";
-			border = "1px solid #9cf";
-			width = columnWidth + "px";
-			overflow = "auto";
-		}
-		var table = document.createElement("table");
-		wrapper.appendChild(table);
-		
-		var body = document.createElement("tbody");
-		table.appendChild(body);
-		wrapper.body = body;
-		return wrapper;
-	}
-	
-	function updateTables(availableItemsTable, selectedItemsTable) {
-		availableItemsTable.innerHTML = "";
-		selectedItemsTable.innerHTML = "";
-		var itemsWidth = columnWidth - 17;
-		var aRecords = store.getData();
-		var selectedRecords = [];
-		for (var i in aRecords) {
-			var selected = false;
-			var record = aRecords[i];
-			for (var j in selectedRecords) {
-				if (areEqual(record, selectedRecords[j])) {
-					selected = true;
-					break;
+			var selectedValues = _this.getValue() || [];
+		//	console.log(selectedValues);
+			if (div.isSelected) {
+				if (selectedValues instanceof iup.data.Store) {
+					var rawData = selectedValues.getRawData();
+					
+					selectedValues.removeRecord(selectedValues.getData()[indexOf(rawData, div.value)]);
+				} else {
+					selectedValues.splice(indexOf(selectedValues, div.value), 1);
+				}
+			} else {
+		//		selectedItems.appendChild(div);
+				if (selectedValues instanceof iup.data.Store) {
+					selectedValues.addRecord(div.value);
+				} else {
+					selectedValues.push(div.value);
 				}
 			}
-			
-			var tr = createTr(record, itemsWidth);
-			if (selected) {
-				selectedItemsTable.appendChild(tr);
-			} else {
-				availableItemsTable.appendChild(tr);
+		//	console.log(_this.getValue().getRawData(), _this.getField().getOriginalValue());
+			if ( ! (selectedValues instanceof iup.data.Store)) {
+				_this.setValue(selectedValues);
 			}
+			
+			updateTables.call(_this);
+			
+			function indexOf(collection, item) {
+				for (var i = 0, n = collection.length; i < n; i++) {
+					if ( _this.cfg.sameObject(collection[i], item)) {
+						return i;
+					}
+				}
+				return -1;
+			}
+ 		}
+		
+		function recordSelected(record, selectedValues) {
+			var convertedVal = getValue(record);
+
+			if (!selectedValues) {
+				return false;
+			}
+			for (var i = 0, n = selectedValues.length; i < n; i++) {
+				if (cfg.sameObject(convertedVal, selectedValues[i])) {
+					return true;
+				}
+			}
+			return false;
+		}
+		
+		function getValue(record) {
+			if (typeof cfg.valueField === 'function') {
+				return cfg.valueField(record);
+			} 
+			return record.get(cfg.valueField);
+		}
+		
+		function getLabel(record) {
+			if (typeof cfg.displayField === 'function') {
+				return cfg.displayField(record);
+			} 
+			return record.get(cfg.displayField);
 		}
 	}
 	
-	function createTr(record, width) {
-		var tr = document.createElement("tr");
-		var td = document.createElement("td");
-		tr.appendChild(td);
-		var div = document.createElement("td");
-		td.appendChild(div);
-		div.style.width = width + "px";
-		div.style.overflow = "hidden";
-		var text = typeof displayField == "function" ? displayField(record) : record.get(displayField);
-		div.innerHTML = text;
-		return tr;
-	}
+	return {
+		statics : {
+			type : 'selectmany'
+		},
+		defaults : {
+			store : undefined,
+			areEqual : undefined,
+			//converter : undefined,
+			displayField : undefined,
+			valueField : undefined,
+			sameObject : function(available, selected) {
+				return available === selected;
+			}
+		},
+		prototype : {
+			_buildEl : function() {
+				var _this = this;
+				var container = iup.utils.createEl('div', {
+					style : {
+					    position : 'relative',
+					   // width : '400px',
+					    height : '150px',
+					    bachgroundColor : '#579'
+					}
+				});
 	
-	iup.form.SelectMany.superclass.constructor.call(this, oCfg);  
+				var availableItems = iup.utils.createEl('div', {
+					style : {
+					    position : 'absolute',
+					    right : '50%',
+					    left : '0px',
+					    top : '0px',
+					    bottom : '0px',
+					    border : '1px solid green',
+					    marginRight:'20px',
+					    overflowX : 'hidden',
+					    overflowY : 'auto'
+					}
+				});
+				container.appendChild(availableItems);
 	
-};
-
-extend(iup.form.SelectMany, iup.form.Field);
-
-
-*/
+				var selectedItems = iup.utils.createEl('div', {
+				    style : {
+					    position : 'absolute',
+					    left : '50%',
+					    right : '0px',
+					    top : '0px',
+					    bottom : '0px',
+					    border : '1px solid red',
+					    marginLeft:'20px',
+					    overflowX : 'hidden',
+					    overflowY : 'auto'
+					}
+			    });
+				container.appendChild(selectedItems);
+	
+				var buttonsContainer = iup.utils.createEl('div', {
+					style : {
+					    position : 'absolute',
+					    top : '0px',
+					    bottom : '0px',
+					    left : '50%',
+					    width : '30px',
+					    marginLeft:'-15px'
+					}
+				});
+				container.appendChild(buttonsContainer);
+				
+				function createButton(text, className, handler){
+					return iup.utils.createEl('div', {
+					    style : {
+						    marginTop : '10px',
+						    height : '25px',
+						    border : '1px solid blue',
+						    textAlign : 'center',
+						    fontWeight : 'bold',
+						    color : '#579',
+						    cursor : 'pointer'
+						},
+						content : text
+					});
+				}
+				buttonsContainer.appendChild(createButton('>>'));
+				buttonsContainer.appendChild(createButton('>'));
+				buttonsContainer.appendChild(createButton('<'));
+				buttonsContainer.appendChild(createButton('<<'));
+				
+				//this._styleEl = container;
+				this._el = container;
+				
+				updateTables.call(_this, availableItems, selectedItems);
+				this.cfg.store.events.on('load', function() {
+					updateTables.call(_this, availableItems, selectedItems);
+				});
+				
+				/*var em = this._eventManager;
+				
+				var table = document.createElement("table");
+				table.style.width = oCfg.width + "px;";
+				var tableBody = document.createElement("tbody");
+				table.appendChild(tableBody);
+				var tr = document.createElement("tr");
+				tableBody.appendChild(tr);
+				
+				var availableItemsTd = document.createElement("td");
+				tr.appendChild(availableItemsTd);
+				var buttonsPanel = document.createElement("td");
+				tr.appendChild(buttonsPanel);
+				var selectedItemsTd = document.createElement("td");
+				tr.appendChild(selectedItemsTd);
+				
+				addButtons(buttonsPanel);
+				
+				var availableItems = createTable();
+				availableItemsTd.appendChild(availableItems);
+				var selectedItems = createTable();
+				selectedItemsTd.appendChild(selectedItems);
+				
+				updateTables(availableItems.body, selectedItems.body);
+				
+				store.on("load", function() {
+					updateTables(availableItems.body, selectedItems.body);
+				});
+	
+				return table;*/
+			},
+			_updateEl :  function(el, val) {
+				updateTables.call(this);
+			}
+		}	
+	};
+}());
 
 iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 	defaults : {
 		fields 		: [], 	
-		labelWidth 	: 100,
+		labelWidth 	: 150,
 		fieldWidth	: undefined,
 		rowSpace	: 5,
 		columns 	: 1,
@@ -792,7 +1062,7 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 					tr.appendChild(labelTd);
 					labelTd.style.width = cfg.labelWidth + "px";
 					if (oField && oField.getLabel()) {
-						labelTd.innerHTML = (oField.isRequired() ? "*" : "") + oField.getLabel();
+						labelTd.innerHTML = (oField.isRequired() && !oField.isReadOnly() ? "*" : "") + oField.getLabel();
 						labelTd.className = "form-label";
 					}
 					
@@ -811,8 +1081,9 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 					this.fields.push(oField);
 				}
 			}
-			
-			this._el = table;
+			var wrapper = document.createElement('div');
+			wrapper.appendChild(table);
+			this._el = wrapper;
 			
 			/*function isRequired(fieldName) {
 				if (cfg.model) {
@@ -854,7 +1125,7 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 			var self = this,
 				cfg = this.cfg,
 				el = this.getEl(),
-				items = el.children[0].children;
+				items = el.children[0].children[0].children;
 			
 			var rows = Math.ceil(cfg.fields.length / cfg.columns);
 			
@@ -888,8 +1159,9 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 			init();
 			
 			function handler(evt) {
+				var target;
 				if (evt.keyCode === ESC) {
-					removeSelection ()
+					removeSelection ();
 					if (typeof callback == "function") {
 						setTimeout(function() {
 							callback();
@@ -898,7 +1170,7 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 					}
 				} else if (evt.keyCode === ENTER) {
 					var fieldIdx = position.col + position.row * self.cfg.columns;
-					var target = self.fields[fieldIdx];
+					target = self.fields[fieldIdx];
 					
 					if (target) {
 						removeSelection ();
@@ -919,7 +1191,7 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 					}
 				}
 				
-				var target;
+				
 				if (evt.keyCode === LEFT && position.col > 0) {
 					position.col--;
 				} else if (evt.keyCode === UP && position.row > 0) {
@@ -942,7 +1214,7 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 		_eachField : function (action) {
 			for (var idx in this.fields) {
 				var field = this.fields[idx];
-				if (field) {
+				if (field && !field.cfg.detached) {
 					action(field);
 				}
 			}
@@ -1077,7 +1349,7 @@ iup.utils.createComponent('iup.form.Form', iup.form.FieldSet, function() {
 			this._fieldSets.push(el);
 		} else if (el instanceof iup.form.Field) {
 			this._fields.push(el);
-		} /*else if (el instanceof iup.layout.TabPanel) { // TODO this shold be fixed in TabPanel
+		} /*else if (el instanceof iup.layout.TabPanel) { 
 			var items = el.cfg.content;
 			for (var i in items) {
 				getFieldSets.call(this, items[i].content);
@@ -1181,5 +1453,5 @@ iup.utils.createComponent('iup.form.Form', iup.form.FieldSet, function() {
 				}
 			}*/
 		}
-	}
+	};
 }());

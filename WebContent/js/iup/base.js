@@ -1,10 +1,10 @@
-if(typeof iup == "undefined") {
-	iup = {};
-}
+var iup = {
+	utils : {}
+};
 
-if(typeof iup.utils == "undefined") {
-	iup.utils = {};
-}
+//if(typeof iup.utils == "undefined") {
+//	iup.utils = {};
+//}
 
 function extend(Child, Parent) {
 	var F = function() { };
@@ -39,7 +39,15 @@ iup.utils.merge = function (defaults, config) {
 		}
 	}
 	return ret;
-}
+};
+iup.utils.merge.info = {
+	description : 'Helper function for merging properties',
+	params : {
+		defaults : 'default object',
+		config : 'properties'	
+	},
+	result : 'new object containing properties of both objects'
+};
 
 iup.utils.createComponent = function(name, parent, oCfg) {
 	
@@ -59,8 +67,10 @@ iup.utils.createComponent = function(name, parent, oCfg) {
 		type = cfg.construct;
 	} else {
 		type = function (oCfg) {
-			
-			this.cfg = iup.utils.merge(cfg.defaults, oCfg);
+			if (this.constructor === type) {
+				checkConfig(oCfg, type);
+			} 
+			this.cfg = iup.utils.merge(type.defaults, oCfg, true);
 			
 			if (cfg.events) {
 				this.events = new iup.EventManager({
@@ -84,6 +94,7 @@ iup.utils.createComponent = function(name, parent, oCfg) {
 			}
 		};
 	}
+	type.defaults = cfg.defaults;
 	for (var key in cfg.statics) {
 		type[key] = cfg.statics[key];
 	}
@@ -95,7 +106,9 @@ iup.utils.createComponent = function(name, parent, oCfg) {
 	for (var key in cfg.prototype) {
 		type.prototype[key] = cfg.prototype[key];
 	}
-
+	
+	type.fullName = name;
+	//console.log(name);
 	pack[className] = type;
 	
 	function buildPath(aPath) {
@@ -109,7 +122,23 @@ iup.utils.createComponent = function(name, parent, oCfg) {
 		}
 		return root;
 	}
-}
+	function checkConfig(cfg, type) {
+		var defaults = getDefaults (type);
+		for (var key in cfg) {
+			if (!(key in defaults)) {
+				console.log("WARNING! Possible typo. There's no default '" + key + "' key in " + type.fullName);
+			}
+		}
+	}
+	function getDefaults (type) {
+	 //   console.log(type.defaults)
+		var ret = type.defaults;
+		if (type.superclass) {
+		  	return iup.utils.merge(ret, getDefaults(type.superclass.constructor))
+		}
+	    return ret;
+	}
+};
 
 iup.utils.getResource = function(url, callback) {
 	$.ajax({
@@ -118,12 +147,12 @@ iup.utils.getResource = function(url, callback) {
 		success : function(data,b,c) {
 			callback(data);
 		}
-	})	
-}
+	});	
+};
 
 iup.utils.isChildOf = function(myobj,ContainerObj) {	// also true if myobj == containerObj 
 	var curobj = myobj;
-	while(curobj != undefined && curobj != document.body)
+	while(curobj !== undefined && curobj != document.body)
 	{
 	   if(curobj == ContainerObj){
 		   return true;
@@ -133,35 +162,9 @@ iup.utils.isChildOf = function(myobj,ContainerObj) {	// also true if myobj == co
 	return false;
 };
 
-iup.utils.getParentCell = function(myobj)
-{
-	var curobj = myobj;
-	while(curobj != undefined && curobj != document.body)
-	{
-	   if( curobj.tagName.toLowerCase() == "td" || curobj.tagName.toLowerCase() == "th" ){
-		   return curobj;
-	   }
-	   curobj = curobj.parentNode;
-	}
-	return null;
-};
-
-iup.utils.getParentRow = function(myobj) {
-	var curobj = myobj;
-	while(curobj != undefined && curobj != document.body)
-	{
-		
-	   if( curobj.tagName.toLowerCase() == "tr" ){
-		   return curobj;
-	   }
-	   curobj = curobj.parentNode;
-	}
-	return null;
-};
-
 iup.utils.appendStyle = function(element, obj) {
 	//var el = $(element);
-	for (key in obj) {
+	for (var key in obj) {
 		element.style[key] = obj[key];
 		//el.css(key, obj[key]);
 	}
@@ -180,9 +183,9 @@ iup.utils.convertDate = function(timestamp, showTime) {
 		var month = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 		return month[this.getMonth()];
 	};
-	correctNumber = function(number) {
+	function correctNumber(number) {
 		return (number <= 9) ? '0'+number : number;
-	};
+	}
 
 	var date = new Date(timestamp),
 		year = date.getFullYear(),
@@ -250,7 +253,7 @@ iup.utils.Execution = function () {
 };
 
 iup.utils.createEl = function(tag, oCfg) {
-	var oCfg = oCfg || {};
+	oCfg || (oCfg = {});
 	var cfg = {
 		tag : tag,
 		style : oCfg.style || {},
@@ -283,53 +286,49 @@ iup.utils.createEl = function(tag, oCfg) {
 	return el;
 };
 
-/*iup.utils.getValue = function (record, key) {
-	if (record === null || typeof record == 'undefined') {
-		return undefined;
-	}
+iup.EventManager = function(oCfg){
+	var events = oCfg.events;
 	
-	if (key.indexOf('.') > -1) {
-		return findValue(record, key.split('.'));
-	}
-	
-	return record.get(key);
-	
-	function findValue(record, path, idx) {
-		idx || (idx = 0);
-		var keyName = path[idx];
-		var val = record.get(keyName);
-		if (val === null || val === undefined) {
-			return null;
-		} 
-		if (idx === path.length - 1) {
-			return val;//.value();
-		} 
-		return findValue(val, path, ++idx);
-	}
-};*/
+	for (var idx in events) {
+		this[events[idx]] = [];
+	} 
 
-/*
-function setValue(data, path, idx, value) {
-	var keyName = path[idx];
+	this.addHandler = function(eventName, handler) {
+		if (typeof this[eventName] != "undefined" && typeof handler == "function" ){
+			this[eventName].push(handler);
+			if (this[eventName].latest) {
+				handler.apply(this, this[eventName].latest);
+			}
+		}
+	};
 	
-	if (idx === path.length - 1) {
-		data[keyName] = value;
-	} else {
-		var obj = data[keyName];
-		if (obj === null || obj === undefined) {
-			obj = {};
-			data[keyName] = obj;
-		} 
-		setValue(obj, path, ++idx, value);
-	}
-}
+	this.fireEvent = function (eventName, p1, p2, p3, p4) {
+		
+		if(typeof this[eventName] != "undefined"){
+			var params = new Array(arguments.length - 1);
+			for (var i = 1, n = arguments.length; i < n; i++ ) {
+				params[i - 1] = arguments[i];
+			}
 
-function setNestedValue(key, value) {
-	var split = key.split('.');
-	var field = record[split[0]];
-	var data = field.get() || {};
-	setValue(data, split, 1, value);
-	return data;
-}
-*/
+			this[eventName].latest = params;
+
+			$.each(this[eventName], function(index, handler){
+				handler.apply(this, params);
+			});
+		}
+	};
+	
+	this.addHandlers = function(oHandlers) { 
+		for (var idx in oHandlers){
+			this.addHandler(idx, oHandlers[idx]);
+		}
+	};
+	this.removeHandler = function (eventName, handler) {
+		var idx = this[eventName].indexOf(handler);
+		if (idx > -1) {
+			this[eventName].splice(idx,1);
+		} 
+	};
+	this.on = this.addHandler;
+};
 

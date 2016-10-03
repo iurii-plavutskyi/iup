@@ -1,15 +1,15 @@
-var Entities = {
+//var Entities = {
 
-	Parent : {
+	Parent = {
 		name : 'Parent',
 		fields : [
 			{name : 'id', type : 'number'},
 			{name : 'name', type : 'string'},
 			{name : 'creation', type : 'date'},
-			{name : 'children', type : 'Child[]'}
+			{name : 'children', type : 'Child', isArray : true}
 		]
-	},
-	Child : {
+	};
+	Child = {
 		name : 'Child',
 		fields : [
 			{name : 'id', type : 'number'},
@@ -18,5 +18,5 @@ var Entities = {
 			{name : 'end', type : 'number'},
 			{name : 'creation', type : 'date'}
 		]
-	}
-}
+	};
+//}

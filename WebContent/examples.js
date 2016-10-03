@@ -2,8 +2,8 @@ function ExamplesPanel() {
 	
 	
 	var store = new iup.data.Store({
-		entity : Entities.Parent,
-		model : Entities.Parent,
+		entity : Parent,
+		model : Parent,
 		data : [
 			{id : 1, name:"Name1", lastName:"LastName1", creation : Date.parse('06/05/2005')},
 			{id : 2, name:"Name2", lastName:"LastName2", creation : Date.parse('06/05/1985')},
@@ -48,7 +48,7 @@ function ExamplesPanel() {
 	})
 	
 	var editor = new iup.form.FieldSet({
-		model : Entities.Parent,
+		model : Parent,
 		fields : [
 			{name : 'id', label : "ID:", readonly : true},
 			{name : 'name', label : "Name:", required : true},
@@ -78,7 +78,7 @@ function ExamplesPanel() {
 	});
 	
 	grid.events.on('select', function(selection){
-		editor.loadData(selection[0].record);
+		editor.loadRecord(selection[0].record);
 	});
 	
 	var contentManagement = new iup.layout.BorderPanel({

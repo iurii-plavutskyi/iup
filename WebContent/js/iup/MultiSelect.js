@@ -28,7 +28,7 @@ iup.form.MultiselectField = function(oCfg) {
 				
 				for (var i = 0; i < val.length; i++) {
 					var displayVal = typeof oCfg.displayField == 'function' ? oCfg.displayField(val[i]) : val[i].get(oCfg.displayField);
-					values.push(displayVal)
+					values.push(displayVal);
 				}
 				return values.join(', ');
 			} else {

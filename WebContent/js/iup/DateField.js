@@ -23,7 +23,7 @@ iup.utils.createComponent('iup.form.DateField', iup.form.Field, function() {
 		table.appendChild(tBody);
 		
 		tBody.onclick = function(e) {
-			var target = e.target != null ? e.target : e.srcElement;
+			var target = e.target ? e.target : e.srcElement;
 			if (target.tagName === 'TD') {
 				if (target.innerHTML) {
 					selectDate(parseInt(target.innerHTML,10));
@@ -42,9 +42,9 @@ iup.utils.createComponent('iup.form.DateField', iup.form.Field, function() {
 			buildCal(oDate.getFullYear(), oDate.getMonth());
 			
 			if (!cfg.showTime) {
-				var date = record.get('date');
+//				var date = record.get('date');
 				if (typeof onSelect === 'function') {
-					onSelect(date.getTime());
+					onSelect(record.get('date').getTime());
 				}
 				win.hide();
 			}
@@ -227,7 +227,7 @@ iup.utils.createComponent('iup.form.DateField', iup.form.Field, function() {
 			record.set('date', date);
 			form.loadRecord(record);
 			buildCal(date.getFullYear(), date.getMonth());
-		};
+		}
 		
 		monthField.events.on('changed', function() {
 			var date = record.get('date');
@@ -318,12 +318,12 @@ iup.utils.createComponent('iup.form.DateField', iup.form.Field, function() {
 			showTime : false,
 			regex : cfg. showTime ? /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$/ : /^\d{2}\/\d{2}\/\d{4}$/,
 			renderer : function(val) {
-				return iup.utils.convertDate(Date.parse(val), cfg.showTime || false);
+				return iup.utils.convertDate(val, cfg.showTime || false);
 			},
 			parser :  function(val, fieldValue) {
 				return new Date(val).toISOString();
 			}
-		}
+		};
 	};
 	return {
 		statics : {
@@ -386,7 +386,7 @@ iup.utils.createComponent('iup.form.DateField', iup.form.Field, function() {
 			
 			//this._updateEl(input, typeof this.cfg.renderer === 'function' ? this.cfg.renderer(oThis.getField().get()) : this.getField().get());
 		}*/
-	}
+	};
 	/*var oThis = this;
 	var input;
 	var button;

@@ -1,15 +1,8 @@
 
 
 iup.utils.PaginationManager = function(oCfg) {
-	var cfg = {
-		pageSize : 20,
-		currentPage : 0,
-		totalCount  : 0,
-		currentPage : 1,
-		filter : {},
-		sortOrder : oCfg.sortOrder,
-		paramsConverter : defaultConverter
-	}; 
+	
+	var cfg = iup.utils.merge(iup.utils.PaginationManager.defaults, oCfg);
 	
 	var eventManager = new iup.EventManager({
 		events : ["pageChanged", "totalCountChanged"]
@@ -22,17 +15,10 @@ iup.utils.PaginationManager = function(oCfg) {
 		}
 	}
 	
-	function defaultConverter(config) {
-		return {
-			fetchStart : config.pageSize * (config.currentPage - 1), 
-			fetchSize : config.pageSize,
-			sortOrder : [(cfg.sortOrder)]
-		};
-	}
-	
 	this.setSortOrder = function(sortOrder) {
 		cfg.sortOrder = sortOrder;
 	};
+	
 	this.getSortOrder = function() {
 		return cfg.sortOrder;
 	};
@@ -83,29 +69,42 @@ iup.utils.PaginationManager = function(oCfg) {
 	this.events = eventManager;
 };
 
+iup.utils.PaginationManager.defaults = {
+	pageSize : 20,
+	//currentPage : 0,
+	totalCount  : 0,
+	currentPage : 1,
+	filter : {},
+	paramsConverter : function (config) {
+		return {
+			fetchStart : config.pageSize * (config.currentPage - 1), 
+			fetchSize : config.pageSize,
+			sortOrder : [config.sortOrder]
+		};
+	},
+	sortOrder : undefined
+};
+
 iup.utils.PaginationBar = function(oCfg) {
-	var cfg = {
-		paginationManager 	: oCfg.paginationManager, 
-		buttonsNearCurrent 	: oCfg.buttonsNearCurrent || 5,
-		fieldWidth			: oCfg.fieldWidth || 40,
-		labelWidth			: oCfg.labelWidth || 100
-	};
+	var cfg = iup.utils.merge(iup.utils.PaginationBar.defaults, oCfg);
+	
 	cfg.buttonsCount = cfg.buttonsNearCurrent * 2 + 1;
 	
 	this._buildEl = function() {
 		var el = document.createElement("div");
 		    el.className = "pagination-bar";
 		    
-	    var buttonsDiv = document.createElement("div");
-	    buttonsDiv.style.textAlign = "center";
-	    el.appendChild(buttonsDiv);
+	    var buttonsDiv = iup.utils.createEl("div", {
+	    	style : {
+	    		cssFloat : 'left',
+		    	styleFloat : 'left',
+		    	width : '100%',
+		    	height : '100%',
+		    	textAlign : "center"
+	    	}
+	    });
 	    
-	    with(buttonsDiv.style) {
-	    	cssFloat = 'left';
-	    	styleFloat = 'left';
-	    	width = '100%';
-	    	height = '100%';
-	    }
+	    el.appendChild(buttonsDiv);
 	    
 	    var relDiv = document.createElement("div");
 	    el.appendChild(relDiv);
@@ -131,12 +130,12 @@ iup.utils.PaginationBar = function(oCfg) {
 		});
 	    var totalL = new iup.form.Label({text : 'Total Records:', style : {cssFloat : 'right', styleFloat : 'right', marginRight: '20px'} });
 	    
-	    var total = new iup.form.Field({
-	    	style 		: {cssFloat : 'right', styleFloat : 'right', marginRight: '20px'},
-			name 		: 'total',
-			readOnly	: true,
-			width		: cfg.fieldWidth,
-			value		: cfg.paginationManager.getTotalCount()
+	    var total = new iup.form.Label({
+	    	style 		: {cssFloat : 'right', styleFloat : 'right', marginRight: '20px', minWidth : '50px'},
+			//name 		: 'total',
+			//readOnly	: true,
+			//width		: cfg.fieldWidth,
+			text		: cfg.paginationManager.getTotalCount()
 		});
 		
 		absDiv.appendChild(total.getEl());
@@ -152,7 +151,7 @@ iup.utils.PaginationBar = function(oCfg) {
 		
 		cfg.paginationManager.events.on("totalCountChanged", function(val) {
 	    	appendButtons(buttonsDiv);
-	    	total.setValue(cfg.paginationManager.getTotalCount());
+	    	total.setText(cfg.paginationManager.getTotalCount());
 	    });
 	    
 	    cfg.paginationManager.events.on("pageChanged", function() {
@@ -186,9 +185,10 @@ iup.utils.PaginationBar = function(oCfg) {
 	    var showGoToLastPage = lastButtonIndex != pageCount;
 	    firstButtonIndex = firstButtonIndex + (showGoToFirstPage ? 1 : 0);
 	    lastButtonIndex = lastButtonIndex - (showGoToLastPage ? 1 : 0);
+	    var button;
 	    
 	    if (showGoToFirstPage) {
-	    	var button = document.createElement("button");
+	    	button = document.createElement("button");
 	    	button.className = "pag-button";
 	    	button.innerHTML = '<span  class="glyphicon glyphicon-backward"></span>';
 	    	button.page = 1;
@@ -198,7 +198,7 @@ iup.utils.PaginationBar = function(oCfg) {
 
 	    if (firstButtonIndex != lastButtonIndex) {
 		    for (var idx=firstButtonIndex; idx <= lastButtonIndex; idx++) {
-		    	var button = document.createElement("button");
+		    	button = document.createElement("button");
 		    	button.className = "pag-button";
 		    	button.innerHTML = idx;
 		    	button.page = idx;
@@ -212,7 +212,7 @@ iup.utils.PaginationBar = function(oCfg) {
 	    }
 	    
 	    if (showGoToLastPage) {
-	    	var button = document.createElement("button");
+	    	button = document.createElement("button");
 	    	button.className = "pag-button";
 	    	button.innerHTML = '<span  class="glyphicon glyphicon-forward"></span>';
 	    	button.page = pageCount;
@@ -221,5 +221,10 @@ iup.utils.PaginationBar = function(oCfg) {
 	    }
     }
 };
-
+iup.utils.PaginationBar.defaults = {
+	paginationManager 	: undefined, 
+	buttonsNearCurrent 	: 5,
+	fieldWidth			: 40,
+	labelWidth			: 100
+};
 extend(iup.utils.PaginationBar, iup.layout.Panel);

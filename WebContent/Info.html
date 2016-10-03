@@ -1,0 +1,159 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>TitleStateManagement</title>
+	<link rel="stylesheet" href="css/iup.css" />
+	<link rel="stylesheet" href="css/bootstrap.css" />
+	
+	<script type="text/javascript" src="js/adds/jquery-1.11.0.min.js"></script>
+	
+	<script type="text/javascript" src="js/iup/base.js"></script>
+	<script type="text/javascript" src="js/iup/Layout.js"></script>
+	<script type="text/javascript" src="js/iup/Button.js"></script>
+	<script type="text/javascript" src="js/iup/Grid.js"></script>
+	<script type="text/javascript" src="js/iup/Data.js"></script>
+	<script type="text/javascript" src="js/iup/DnD.js"></script>
+	<script type="text/javascript" src="js/iup/Window.js"></script>
+	<script type="text/javascript" src="js/iup/DB.js"></script>
+	<script type="text/javascript" src="js/iup/Form.js"></script>
+	<script type="text/javascript" src="js/iup/ComboBox.js"></script>
+	<script type="text/javascript" src="js/iup/DateField.js"></script>
+	<script type="text/javascript" src="js/iup/PaginationBar.js"></script>
+	<script type="text/javascript" src="js/iup/Singletons.js"></script>
+	<!-- 
+	<script type="text/javascript" src="js/Utils.js"></script>
+	<script type="text/javascript" src="js/Models.js"></script>
+ -->
+    <script type="text/javascript">
+    	
+    	$(function() {
+    		
+    		var testPanel = new iup.layout.Grid ({
+    			store : new iup.data.Store({
+    				data : [
+    					{name : 'n1', value : 'v1' },
+    					{name : 'n2', value : 'v2' }
+    				]
+    			}),
+    			columns : [
+    				{key : 'name', header : 'Name'},
+    				{key : 'value', header : 'Value'}
+    			]
+    		
+    		})
+    		
+    		new iup.layout.ViewPort({
+    			content : new iup.layout.TabPanel({
+    				content : [
+    					{title : 'Info', content : buildHelp()},
+    					{title : 'Test', content : testPanel}
+    				]
+    			})
+    		})
+    		
+    		function buildHelp() {
+	    		var tree = buildNode(iup, 'iup');
+	    		var description = new iup.utils.createEl('div', {
+	    			className : '',
+		    		style : {
+		    			position : 'absolute', 
+		    			left : '300px',
+						top : '0px',
+						bottom : '0px',
+						right : '0px',
+						overflow : 'hidden'
+					}
+		    	});
+	    		var s = tree.style;
+		    	s.position = 'absolute';
+		    	s.left = '0px';
+		    	s.top = '0px';
+		    	s.bottom = '0px';
+		    	s.width = '300px';
+		    	s.overflow = 'hidden';
+	    		
+	    		//document.getElementsByTagName('body')[0].appendChild(tree);
+	    		//document.getElementsByTagName('body')[0].appendChild(description);
+	    		
+	    		return new iup.layout.BorderPanel({
+	    			layoutConfig : { left : 200},
+	    			splitter : 'left',
+	    			left : new iup.layout.Panel({
+	    				content : tree
+	    			}),
+	    			center : new iup.layout.Panel({
+	    				content : description
+	    			})
+	    			
+	    		})
+	    		
+	    		function buildFunctionInfo(info) {
+	    			var ret = [];
+	    			if (info.description) {
+	    				ret.push('Description : ' + info.description);
+	    			}
+	    			if (info.params) {
+	    				ret.push('Params :');
+	    				for (var key in info.params) {
+	    					ret.push('<b>' + key + '</b> - ' + info.params.key);
+	    				}
+	    			}
+	    			if (info.result) {
+	    				ret.push('Returns :' + info.result);
+	    				
+	    			}
+	    			
+	    			return  ret.join('<br/>');
+	    				
+	    		}
+	    		
+	    		function buildNode(node, name) {
+	    			  var button = iup.utils.createEl('span', {
+	    			    content : '+', 
+	    			    style : {
+	    			      width : '15px', height : '15px', cursor : 'pointer'
+	    			    }
+	    			  });
+	    			 
+	    			  var title = iup.utils.createEl('span', {content : name});
+	    			  var header = iup.utils.createEl('div', {content : [button, title]});
+	    			  var contentVisible = false;
+	    			  button.onclick = function(){
+	    			    contentVisible = !contentVisible;
+	    			    content.style.display = contentVisible ? 'block' : 'none';
+	    			  }
+	    			  var content = iup.utils.createEl('div', {style : {display : 'none', paddingLeft:'15px'}});
+	    			  for (var key in node) {
+	    			    try {
+	    			      var childNode = node[key];
+	    			      if (key !== 'Notification')
+	    			      if (typeof childNode === 'function') {
+	    			        var funcDesc = iup.utils.createEl('div');
+	    			        funcDesc.innerHTML = childNode.fullName || key;
+	    			        funcDesc.onclick = function (info) {
+	    			        	return function() {
+	    			        		description.innerHTML = info;
+	    			        	}
+	    			          }(childNode.info ? buildFunctionInfo(childNode.info) : 'No documentation available.');
+	    			        content.appendChild(funcDesc);
+	    			      } else {
+	    			        content.appendChild(buildNode(childNode, key));
+	    			      }
+	    			    } catch (e) {console.log(e);}
+	    			  }
+	    			  //var div = ;
+	    			  return iup.utils.createEl('div', {content : [header,content]});
+    			 }
+    		
+    			
+    		}
+    	    	
+    	});
+    	
+    </script>
+</head>
+<body>
+
+</body>
+</html>

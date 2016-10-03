@@ -1,19 +1,21 @@
-if(typeof iup == "undefined"){
+"use strict";
+
+/*if(typeof iup == "undefined"){
 	iup = {};
 }
 
 if(typeof iup.popup == "undefined"){
 	iup.popup = {};
-}
-
+}*/
+iup.popup = {};
 iup.popup.zIndex = 0;
 
 iup.utils.createComponent('iup.popup.Window', undefined, function(){
 	function WindowResizeManager(win) {
-	    var mouseOffset;
-	 	var dragStartPosition;
-	 	var prevDragPosition;
-	 	var currentElement;
+	   // var mouseOffset = null;
+	 	var dragStartPosition = null;
+	 	var prevDragPosition = null;
+	 	var currentElement = null;
 	    var resizeDiv = null;
 		var cfg = win.cfg;
 		var table = win._state.table;
@@ -68,7 +70,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 	 			}
 	 		},
 	 		mouseDown	: function(e, element) {
-				mouseOffset = getMouseOffset(element, e);
+				//mouseOffset = getMouseOffset(element, e);
 	       		dragStartPosition = {x : e.pageX, y : e.pageY};
 	       		prevDragPosition = {x : e.pageX, y : e.pageY};
 	       		currentElement = element;
@@ -136,9 +138,9 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 	}
 
 	function WindowDragManager(win) {
-	    var mouseOffset;
-	    var windowSize;
-	    var screenSize;
+	    var mouseOffset = null;
+	    var windowSize = null;
+	    var screenSize = null;
 	 	var cfg = win.cfg;
 	 	var dragMaster = new iup.DragMaster({
 	 		mouseUp		: function() {
@@ -149,7 +151,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 		        if (e.pageY < mouseOffset.y) {
 		        	s.top = '0px';
 		        } else if (screenSize.y < (e.pageY - mouseOffset.y + windowSize.y)) {
-		        	s.top = screenSize.y - windowSize.y + 'px';
+		        	s.top = Math.max(0, screenSize.y - windowSize.y) + 'px';
 		        } else {
 		        	s.top = e.pageY - mouseOffset.y + 'px';
 		        }
@@ -191,17 +193,17 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 			end : {x : oCfg.end.x, y : oCfg.end.y},
 			time : oCfg.time || 300,
 			callback : oCfg.callback
-		}
+		};
 		
 		var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
                               window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
 
-		var start = new Date().getTime();
+	//	var start = new Date().getTime();
 		var animationStartTime = window.performance.now();
 		
 		function step(timestamp) {
 			var progress = (timestamp - animationStartTime)/ cfg.time,
-				x = cfg.end.x + (( cfg.start.x - cfg.end.x ) * (1 - progress));
+				x = cfg.end.x + (( cfg.start.x - cfg.end.x ) * (1 - progress)),
 				y = cfg.end.y + (( cfg.start.y - cfg.end.y ) * (1 - progress));
 			
 			if (progress < 1) {
@@ -272,9 +274,9 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 			var self = this;
 			
 			this._state.closeButton = new iup.Button({
-				icon : 'svg/close.svg',
+				//icon : 'svg/close.svg',
 				style : {backgroundColor : 'transparent'},
-				className	: 'window-close',
+				className	: 'window-close glyphicon glyphicon-remove',
 				visible	: this.cfg.closable,
 				handler	: function() { self.hide(); }
 			});
@@ -318,7 +320,16 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 			
 			this._state.tdMid.appendChild(this._state.win.getEl());
 			
-			document.getElementsByTagName("body")[0].appendChild(this._state.table);
+			//var body = /*iup.layout.ViewPort.getBody() ||	*/document.getElementsByTagName("body")[0];
+			//body.appendChild(this._state.table);
+			
+			var id = self.cfg.id;
+			if (id) {
+				iup.db.userConfig.onload('win_' + id, function (config) {
+					self.cfg.width = config.width;
+					self.cfg.height = config.height;
+				});
+			}
 		},
 		prototype : {
 			minimize : function() {
@@ -362,11 +373,12 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 				if ( !cfg.width) {
 					cfg.width = Math.max(cfg.minWidth, $(cfg.content.getEl()).width() + 2 * cfg.resizeBorder);
 				}
-				//console.log($(cfg.content.getEl()).height(),$(cfg.content.getEl()).outerHeight(), cfg.content.getEl().clientHeight, cfg.content.getEl().offsetHeight)
+				//console.log($(styleEl).innerHeight(),$(cfg.content.getEl()).height(),$(cfg.content.getEl()).outerHeight(), cfg.content.getEl().clientHeight, cfg.content.getEl().offsetHeight)
+
 				if ( !cfg.height) {
-					cfg.height = Math.max(cfg.minHeight, $(cfg.content.getEl()).height() + 2 * cfg.resizeBorder + 32 + 27);
+					cfg.height = Math.max(cfg.minHeight, $(cfg.content.getEl()).height() + 2 * cfg.resizeBorder + 32 + 33 + 2);
 				}
-				
+
 				var left = ($(window).innerWidth() - cfg.width)/2 ;
 				var el = this._state.table;
 				el.style.top = "50px";
@@ -375,14 +387,20 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 				el.style.height = cfg.height + 'px';
 				var styleEl = this._state.tdMid;
 				win.doLayout($(styleEl).innerWidth(), $(styleEl).innerHeight());
+				
+				iup.layout.KeyboardNavigationManager.takeSelection(this.cfg.content);/* = {
+					select : this.select, removeSelection : removeSelection
+				}*/
 			},
 			restore : function() {
 				if (this.cfg.modal) {
 					this._state.mask.show();
 				}
 				this._state.table.style.zIndex = ++iup.popup.zIndex;	
-				this._state.table.style.display = "block";
+//				this._state.table.style.display = "block";
 				
+				var body = /*iup.layout.ViewPort.getBody() ||	*/document.getElementsByTagName("body")[0];
+				body.appendChild(this._state.table);
 			},
 			_buildEl : function(cfg) {
 				var topLeft = iup.utils.createEl('div', {
@@ -404,6 +422,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 						height : defaults.resizeBorder + 'px'
 					}
 				});
+				
 				var topRight = iup.utils.createEl('div', {
 					style : {
 						position : 'absolute',
@@ -464,6 +483,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 						height : defaults.resizeBorder + 'px'
 					}
 				});
+				
 				var botRight = iup.utils.createEl('div', {
 					style : {
 						position : 'absolute',
@@ -486,8 +506,8 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 				
 				var el = iup.utils.createEl('div', {
 					style : {
-						display 		: "none",
-						position 		: 'absolute',
+					//	display 		: "none",
+						position 		: 'absolute'
 					},
 					content : styleEl
 				});
@@ -536,13 +556,23 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 			},
 			resize : function(dX, dY) {
 				var cfg = this.cfg;
-					cfg.width += dX;
-					cfg.height += dY;
-					var el = this._state.table;
-					var styleEl = this._state.tdMid;
-					el.style.width = cfg.width + 'px';
-					el.style.height = cfg.height + 'px';
-					this._state.win.doLayout($(styleEl).width(), $(styleEl).height());
+				cfg.width += dX;
+				cfg.height += dY;
+				var el = this._state.table;
+				var styleEl = this._state.tdMid;
+				el.style.width = cfg.width + 'px';
+				el.style.height = cfg.height + 'px';
+				this._state.win.doLayout($(styleEl).width(), $(styleEl).height());
+				
+				if (cfg.id) {
+    				iup.db.userConfig.put('config', {
+    					id : 'win_' + cfg.id, 
+    					config : {
+    						width : cfg.width,
+    						height : cfg.height
+    					}
+    				});
+	    		}
 			},
 			move : function(dX, dY) {
 				var currOffset = $(this._state.table).offset();
@@ -550,7 +580,9 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 			},
 			hide : function() {
 				this._state.mask.hide();
-				this._state.table.style.display = "none";
+				//this._state.table.style.display = "none";
+				
+				this._state.table.parentNode.removeChild(this._state.table);
 			},
 			close : function() {
 				$(this._state.table).remove();
@@ -567,28 +599,41 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 				}
 			}	
 		}
-	}
-}())
+	};
+}());
 
 iup.popup.Mask = function(oCfg) {
 	oCfg = oCfg || {};
 	
-	var mask = document.createElement("div");
-	$(mask).addClass(oCfg.className || "mask");
-	document.getElementsByTagName("body")[0].appendChild(mask);
-	with(mask.style) {
-		width = "100%";
-		height = "100%";
-		display = "none";
-	}
+	var mask = iup.utils.createEl('div', {
+		style : {
+			width : "100%",
+			height : "100%"/*,
+			display : "none"*/
+		},
+		className : oCfg.className || "mask"
+	});
+		
+//		document.createElement("div");
+//	$(mask).addClass(oCfg.className || "mask");
+//	
+//	var s = mask.style;
+//		s.width = "100%";
+//		s.height = "100%";
+//		s.display = "none";
+
+	
 	
 	this.show = function() {
 		mask.style.zIndex = ++iup.popup.zIndex;	
-		mask.style.display = "block";
+//		mask.style.display = "block";
+		var body = iup.layout.ViewPort.getBody() ||	document.getElementsByTagName("body")[0];
+		body.appendChild(mask);
 	};
 	
 	this.hide = function() {
-		mask.style.display = "none";
+		mask.parentNode.removeChild(mask);
+//		mask.style.display = "none";
 	};
 	
 	this.remove = function() {
@@ -597,23 +642,21 @@ iup.popup.Mask = function(oCfg) {
 };
 
 iup.popup.ConfirmationWindow = function(oCfg) {
-	var confirmButtonText = oCfg.confirmButtonText;
-	var cancelButtonText = oCfg.cancelButtonText;
+	var confirmButtonText = oCfg.confirmButtonText || 'Yes';
+	var cancelButtonText = oCfg.cancelButtonText || 'No';
 	var onconfirm	= oCfg.onconfirm;
 	var title = oCfg.title;
 	var message = oCfg.message;
 	var width = oCfg.width || 300;
-	var height = oCfg.height || 80;
+	var height = oCfg.height;
 	
 	var confirm = new iup.Button({
-		className : 'xcms-btn-default', 
-		icon		: "img/icoCheckGreen16r.png",
+		className : 'button', 
 		text 		: confirmButtonText
 	});
 	
 	var cancel = new iup.Button({
-		className : 'xcms-btn-default', 
-		icon		: "img/ic_cancel.png",
+		className : 'button', 
 		text 		: cancelButtonText
 	});
 	
@@ -643,64 +686,3 @@ iup.popup.ConfirmationWindow = function(oCfg) {
 	win.show();
 };
 
-iup.popup.Notification = {
-	shown : false,
-	items : [],
-	show	: function() {
-		var oThis = this;
-		oThis.shown = true;
-		var item = this.items.shift();
-		var title = item.title;
-		var message	= item.message;
-		var type = item.type || "info";
-		
-		var div = document.createElement("div");
-		with (div.style) {
-			display	= "none";
-			position = "absolute";
-			top = "20px";
-			padding = "10px";
-			zIndex	=  ++iup.popup.zIndex;
-			backgroundColor = "#fff";
-			border = "1px solid #BAC5DC";
-			minWidth = "200px";
-			
-		}
-		
-		var img ="";
-		switch (type) {
-			case "info" : img = "img/notification/info.png"; break;
-			case "warning" : img = "img/notification/warning.png"; break;
-			case "error" : img = "img/notification/error.png"; break;
-		}
-		img = "<img src='" + img + "'/>";
-			
-		div.innerHTML = "<div><table><tbody><tr><td>" + img + "</td><td style='color: #105285;font-size: 11px;font-weight: bold;margin-top: 2px;white-space: nowrap;'>"+ title + "</td></tr></tbody></table></div>" +
-				"<div style='margin-top:5px;margin-bottom:5px;color:#333;text-align:center;'>" + message + "</div>";
-		
-		document.getElementsByTagName("body")[0].appendChild (div);
-		
-		$(div).css('left', (window.innerWidth - $(div).width() ) / 2 + "px");
-		
-		$(div).fadeIn(1000);
-		
-		setTimeout(function(){
-		  $(div).fadeOut(1000, function() {
-		  	$(div).remove();
-		  	
-		  	if (oThis.items.length > 0) {
-		  		oThis.show();
-		  	} else {
-		  		oThis.shown = false;
-		  	}
-		  });
-		  
-		}, 2000);
-	},
-	notify : function(oCfg) {
-		this.items.push(oCfg);
-		if (!this.shown) {
-			this.show();
-		}
-	}
-}
