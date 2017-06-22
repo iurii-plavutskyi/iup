@@ -30,7 +30,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 			$(div).offset( $(table).offset() );
 			div.style.borderRadius = '5px';
 			div.style.zIndex = iup.popup.zIndex++;
-			document.getElementsByTagName('body')[0].appendChild(div);
+			cfg.container/*document.getElementsByTagName('body')[0]*/.appendChild(div);
 			return div;
 		}
 		
@@ -44,7 +44,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 			        	win.move(resize.hMove ? -resize.dX : 0, resize.vMove ? -resize.dY : 0);
 			        }
 	 			}
-				document.getElementsByTagName('body')[0].style.cursor = '';
+				cfg.container/*document.getElementsByTagName('body')[0]*/.style.cursor = '';
 	 		},
 	 		
 	 		mouseMove	: function (e) {
@@ -77,7 +77,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 	       		if (cfg.resizeModel === 'border') {
 	       			resizeDiv = createResizeDiv();
 	       		}
-				document.getElementsByTagName('body')[0].style.cursor = currentElement.style.cursor;
+				cfg.container/*document.getElementsByTagName('body')[0]*/.style.cursor = currentElement.style.cursor;
 		        return true;
 	 		}
 	 	});
@@ -170,14 +170,18 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 	 			}
 	       		mouseOffset = getMouseOffset(element, e);
 	       		windowSize = {x : $(win._state.table).width(), y : $(win._state.table).outerHeight()};
-	       		screenSize = {x : $(window).width(), y : $(window).height()};
+	       		screenSize = {x : $(win.cfg.container).width(), y : $(win.cfg.container).height()};
 		        return true;
 	 		}
 	 	});
 	 	
 	 	function getMouseOffset(target, e) {
 	        var docPos  = iup.DragMaster.getPosition(target);
-	        return {x:e.pageX - docPos.x + cfg.resizeBorder + 1, y:e.pageY - docPos.y + cfg.resizeBorder + 1};
+	        var parentPos  = iup.DragMaster.getPosition(win.cfg.container);
+	        console.log(docPos, parentPos);
+	        console.log(- docPos.x + parentPos.x, target.offsetLeft);
+	        console.log(- docPos.y + parentPos.y, target.offsetTop);
+	        return {x:e.pageX - docPos.x + parentPos.x + cfg.resizeBorder + 1, y:e.pageY - docPos.y + parentPos.y + cfg.resizeBorder + 1};
 	    }
 	 	
 	    this.makeDraggable = function(element){
@@ -248,20 +252,23 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 		}
 	}
 	
-	var defaults = {
-		title			: undefined,
-		width			: undefined,
-		height			: undefined,
-		closable		: false,
-		modal			: true,
-		bbar			: [],
-		content			: undefined,
-		handlers		: [],
-		minHeight		: 59,
-		minWidth		: 100,
-		resizeModel		: 'content', // 'none', 'border', 'content'
-		resizeBorder	: 5,
-		minimizable		: false
+	var defaults = /*function()*/{
+		//return {
+			title			: undefined,
+			width			: undefined,
+			height			: undefined,
+			closable		: false,
+			modal			: true,
+			bbar			: [],
+			content			: undefined,
+			handlers		: [],
+			minHeight		: 59,
+			minWidth		: 100,
+			resizeModel		: 'content', // 'none', 'border', 'content'
+			resizeBorder	: 5,
+			minimizable		: false,
+			container		: undefined//document.getElementsByTagName('body')[0]
+		//}
 	};
 
 	return {
@@ -269,6 +276,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 		events : ['show', 'hide'],
 		construct : function (cfg) {
 			this.cfg = iup.utils.merge(defaults,cfg);
+			this.cfg.container || (this.cfg.container = document.getElementsByTagName('body')[0]);
 			this._state = {};
 			this._buildEl(this.cfg);
 			var self = this;
@@ -340,7 +348,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 					bar.style.position = "fixed";
 					bar.style.bottom = "0px";
 					bar.style.left = "0px";
-					document.getElementsByTagName("body")[0].appendChild(bar);
+					self.cfg.container/*document.getElementsByTagName("body")[0]*/.appendChild(bar);
 					iup.popup.Window.avatarBar = bar;
 				}
 				
@@ -367,6 +375,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 				});
 			},
 			show : function() {
+		//		console.log(this.cfg.container);
 				this.restore();
 				var cfg = this.cfg;
 				var win = this._state.win;
@@ -379,7 +388,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 					cfg.height = Math.max(cfg.minHeight, $(cfg.content.getEl()).height() + 2 * cfg.resizeBorder + 32 + 33 + 2);
 				}
 
-				var left = ($(window).innerWidth() - cfg.width)/2 ;
+				var left = ($(cfg.container).innerWidth() - cfg.width)/2 ;
 				var el = this._state.table;
 				el.style.top = "50px";
 				el.style.left = left + "px";
@@ -399,8 +408,9 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 				this._state.table.style.zIndex = ++iup.popup.zIndex;	
 //				this._state.table.style.display = "block";
 				
-				var body = /*iup.layout.ViewPort.getBody() ||	*/document.getElementsByTagName("body")[0];
-				body.appendChild(this._state.table);
+				var body = /*iup.layout.ViewPort.getBody() ||	*/this.cfg.container;//document.getElementsByTagName("body")[0];
+				this.cfg.container/*body*/.appendChild(this._state.table);
+	//			console.log(this.cfg.container);
 			},
 			_buildEl : function(cfg) {
 				var topLeft = iup.utils.createEl('div', {
@@ -408,8 +418,8 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 						position : 'absolute',
 						top : '0px',
 						left : '0px',
-						height : defaults.resizeBorder + 'px',
-						width  : defaults.resizeBorder + 'px'
+						height : cfg.resizeBorder + 'px',
+						width  : cfg.resizeBorder + 'px'
 					}
 				});
 				
@@ -417,9 +427,9 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 					style : {
 						position : 'absolute',
 						top : '0px',
-						left : defaults.resizeBorder + 'px',
-						right : defaults.resizeBorder + 'px',
-						height : defaults.resizeBorder + 'px'
+						left : cfg.resizeBorder + 'px',
+						right : cfg.resizeBorder + 'px',
+						height : cfg.resizeBorder + 'px'
 					}
 				});
 				
@@ -428,28 +438,28 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 						position : 'absolute',
 						top : '0px',
 						right : '0px',
-						height : defaults.resizeBorder + 'px',
-						width  : defaults.resizeBorder + 'px'
+						height : cfg.resizeBorder + 'px',
+						width  : cfg.resizeBorder + 'px'
 					}
 				});
 				
 				var left = iup.utils.createEl('div', {
 					style : {
 						position : 'absolute',
-						top : defaults.resizeBorder + 'px',
+						top : cfg.resizeBorder + 'px',
 						left : '0px',
-						width : defaults.resizeBorder + 'px',
-						bottom : defaults.resizeBorder + 'px'
+						width : cfg.resizeBorder + 'px',
+						bottom : cfg.resizeBorder + 'px'
 					}
 				});
 				
 				var mid = iup.utils.createEl('div', {
 					style : {
 						position : 'absolute',
-						top : defaults.resizeBorder + 'px',
-						left : defaults.resizeBorder + 'px',
-						right : defaults.resizeBorder + 'px',
-						bottom : defaults.resizeBorder + 'px',
+						top : cfg.resizeBorder + 'px',
+						left : cfg.resizeBorder + 'px',
+						right : cfg.resizeBorder + 'px',
+						bottom : cfg.resizeBorder + 'px',
 						overflow:'hidden'
 					}
 				});
@@ -457,10 +467,10 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 				var right = iup.utils.createEl('div', {
 					style : {
 						position : 'absolute',
-						top : defaults.resizeBorder + 'px',
+						top : cfg.resizeBorder + 'px',
 						right : '0px',
-						width : defaults.resizeBorder + 'px',
-						bottom : defaults.resizeBorder + 'px'
+						width : cfg.resizeBorder + 'px',
+						bottom : cfg.resizeBorder + 'px'
 					}
 				});
 				
@@ -469,8 +479,8 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 						position : 'absolute',
 						bottom : '0px',
 						left : '0px',
-						height : defaults.resizeBorder + 'px',
-						width  : defaults.resizeBorder + 'px'
+						height : cfg.resizeBorder + 'px',
+						width  : cfg.resizeBorder + 'px'
 					}
 				});
 				
@@ -478,9 +488,9 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 					style : {
 						position : 'absolute',
 						bottom : '0px',
-						left : defaults.resizeBorder + 'px',
-						right : defaults.resizeBorder + 'px',
-						height : defaults.resizeBorder + 'px'
+						left : cfg.resizeBorder + 'px',
+						right : cfg.resizeBorder + 'px',
+						height : cfg.resizeBorder + 'px'
 					}
 				});
 				
@@ -489,8 +499,8 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 						position : 'absolute',
 						bottom : '0px',
 						right : '0px',
-						height : defaults.resizeBorder + 'px',
-						width  : defaults.resizeBorder + 'px'
+						height : cfg.resizeBorder + 'px',
+						width  : cfg.resizeBorder + 'px'
 					}
 				});
 				
@@ -549,7 +559,7 @@ iup.utils.createComponent('iup.popup.Window', undefined, function(){
 					windowResizeManager.makeDraggable(botRight);
 				}
 				
-				this._state.mask = new iup.popup.Mask();
+				this._state.mask = new iup.popup.Mask({container : cfg.container});
 			},
 			setPosition : function(x, y) {
 				$(this._state.table).offset( {left: x, top:y});
@@ -627,7 +637,7 @@ iup.popup.Mask = function(oCfg) {
 	this.show = function() {
 		mask.style.zIndex = ++iup.popup.zIndex;	
 //		mask.style.display = "block";
-		var body = iup.layout.ViewPort.getBody() ||	document.getElementsByTagName("body")[0];
+		var body = /*iup.layout.ViewPort.getBody() ||*/	oCfg.container || document.getElementsByTagName("body")[0];
 		body.appendChild(mask);
 	};
 	
@@ -686,3 +696,334 @@ iup.popup.ConfirmationWindow = function(oCfg) {
 	win.show();
 };
 
+//iup.popup.Menu = function (oCfg) {
+//	var cfg = {
+//		content	: oCfg.content,
+//		anchor : oCfg.anchor instanceof iup.layout.Element ? oCfg.anchor.getEl() : oCfg.anchor,
+//		position : (oCfg.position || 'bottom-right').split('-')
+//	}
+//	this.cfg = cfg;
+//	
+//	var submenus = [];
+//	
+//	var self = this;
+//	var container;
+//	var shown = false;
+//	
+//	wrapContent();
+//	
+//	/*if (cfg.anchor) {
+//		cfg.anchor.onclick = function(event) {
+//			if (!shown){
+//				show();
+//				event.stopPropagation();
+//			}
+//			if ( typeof self.onInit === 'function') {
+//				self.onInit();
+//			}
+//		}
+//		
+//	} else {
+//		for (var i = 0, n = submenus.length; i < n; i++) {
+//			submenus[i].onInit = function() {
+//				for (var j = 0, m = submenus.length; j < m; j++) {
+//					submenus[j].autoShow();
+//					//submenus[j].onInit = null;
+//					console.log(j);
+//				}
+//			}
+//		}
+//
+//	}*/
+//	
+//	
+//	
+//	/*this.autoShow = function() {
+//		cfg.anchor.onclick = null;
+//		cfg.anchor.onmouseover = function(event) {
+//			if (!shown){
+//				if (typeof self.beforeShow == 'function') {self.beforeShow();}
+//				show();
+//				//event.stopPropagation();
+//			}
+//		}
+//	}*/
+//	if (cfg.anchor) {
+//		cfg.anchor.onmouseover = function(event) {
+//			if (!shown){
+//				if (typeof self.beforeShow == 'function') {self.beforeShow();}
+//				show();
+//				//event.stopPropagation();
+//			}
+//		}
+//	}
+//	
+//	function mouseUp(event) {
+//		hide();
+//	}
+//	function hideSubmenus() {
+//		for (var i = 0, n = submenus.length; i < n; i++) {
+//			var item = submenus[i].hide();
+//		}
+//	};
+//	
+//	function wrapContent() {
+//		container = iup.utils.createEl('div', {
+//			style : {
+//				position : 'absolute', 
+//				
+//				border : '1px solid black'
+//			},
+//			className : 'menu'/*,
+//			content : cfg.content*/
+//		});
+//		if (cfg.anchor) {container.style.display = 'none';}
+//		for (var i = 0, n = cfg.content.length; i < n; i++) {
+//			var item = cfg.content[i];
+//			if (item instanceof iup.popup.Menu) {
+//				submenus.push(item);
+//				if (cfg.anchor) {item.autoShow()};
+//				item.beforeShow = hideSubmenus;
+//				item = item.cfg.anchor
+//			}
+//			if (item instanceof iup.layout.Element) {
+//				item = item.getEl();
+//			}
+//			container.appendChild(item);
+//		}
+//		//document.body.appendChild(container);
+//	}
+//	
+//	function setPosition() {
+//		var offset = $(cfg.anchor).offset();
+//		if (cfg.position[0] === 'top'){
+//			container.style.top = offset.top - $(container).outerHeight() + 'px';
+//		} else if (cfg.position[0] === 'bottom') {
+//			container.style.top = offset.top + $(cfg.anchor).outerHeight() + 'px';
+//		} else if (cfg.position[0] === 'left') {
+//			container.style.left = offset.left - $(container).outerWidth() + 'px';
+//		} else if (cfg.position[0] === 'right') {
+//			container.style.left = offset.left + $(cfg.anchor).outerWidth() + 'px';
+//		} 
+//		
+//		if (cfg.position[1] === 'right') {
+//			container.style.left = offset.left + 'px';
+//		} else if (cfg.position[1] === 'left') {
+//			container.style.left = offset.left + $(cfg.anchor).outerWidth() - $(container).outerWidth() + 'px';
+//		} else if (cfg.position[1] === 'bottom') {
+//			container.style.top = offset.top + 'px';
+//		} else if (cfg.position[1] === 'top') {
+//			container.style.top = offset.top  + $(cfg.anchor).outerHeight() - $(container).outerHeight() + 'px';
+//		} 
+//		
+////		$(container).css({
+////		    top: offset.top + $(cfg.anchor).outerHeight(),
+////		    left: offset.left + $(cfg.anchor).outerWidth() - $(container).outerWidth()
+////		});
+//	}
+//	
+//	function show() {
+////		if (!container) {
+////			wrapContent();
+////		}
+//		document.body.appendChild(container);
+//		
+//		container.style.display = 'block';
+//		
+//		setPosition();
+//		
+//		document.body.addEventListener('click', mouseUp);
+//		shown = true;
+//	}
+//	
+//	function hide() {
+//		if (shown) {
+//			hideSubmenus();
+//			document.body.removeChild(container);
+//			//container = null;
+//			document.body.removeEventListener('click', mouseUp);
+//			shown = false;
+//		}
+//	}
+//	this.hide = hide;
+//	
+//	this.getEl = function() {return container;};
+//}
+
+iup.popup.ContextMenu = function( oCfg ){
+	var cfg = {
+		target		: oCfg.target, 		// REQUIRED element to override the context menu for  
+		menuBuilder : oCfg.menuBuilder  // REQUIRED util.MenuBuilder or util.GridMenuBuilder
+	}
+	
+	var _replaceContext = false;		// replace the system context menu?
+	var _mouseOverContext = false;		// is the mouse over the context menu?
+	var _menu = null;					// makes my life easier
+
+	InitContext();
+
+	function InitContext()
+	{
+		document.body.onmousedown = ContextMouseDown;
+		document.body.oncontextmenu = ContextShow;
+	}
+
+	// call from the onMouseDown event, passing the event if standards compliant
+	function ContextMouseDown(event)
+	{
+		if (_mouseOverContext) {
+			return;
+		} else {
+			clearMenu();
+		}
+
+		// IE is evil and doesn't pass the event object
+		if (event == null)
+			event = window.event;
+
+		// we assume we have a standards compliant browser, but check if we have IE
+		var target = event.target != null ? event.target : event.srcElement;
+//console.log(event.button == 2 , iup.utils.isChildOf(target, cfg.target), target);
+		if (event.button == 2 && iup.utils.isChildOf(target, cfg.target))
+			_replaceContext = true;
+		else if (!_mouseOverContext)
+			clearMenu();
+	}
+
+	function clearMenu(){
+		if ( _menu != null){
+//			Element.remove(_menu);
+			document.body.removeChild(_menu);
+			_menu = null;
+		}
+	}
+	
+	// call from the onContextMenu event, passing the event
+	// if this function returns false, the browser's context menu will not show up
+	function ContextShow(event)
+	{
+		if (_mouseOverContext)
+			return false;
+
+		// IE is evil and doesn't pass the event object
+		if (event == null)
+			event = window.event;
+
+		// we assume we have a standards compliant browser, but check if we have IE
+		var target = event.target != null ? event.target : event.srcElement;
+		
+		if (_replaceContext)
+		{
+			_menu = cfg.menuBuilder.build(event, target);
+			if ( _menu != null ) {
+				_menu.onmouseover = function() { _mouseOverContext = true; };
+				_menu.onmouseout = function() { _mouseOverContext = false; };
+				
+				var scrollTop = document.body.scrollTop ? document.body.scrollTop :
+					document.documentElement.scrollTop;
+				var scrollLeft = document.body.scrollLeft ? document.body.scrollLeft :
+					document.documentElement.scrollLeft;
+				
+				_menu.style.display = "hidden";//hide(_menu);
+				document.body/*cfg.target*/.appendChild(_menu);
+				_menu.style.position = "absolute"; 
+				_menu.style.left = event.clientX + scrollLeft + "px"; 
+				_menu.style.top = event.clientY + scrollTop + "px";
+				_menu.style.display = "box";
+//				Element.setStyle(_menu,{
+//					position	:"absolute", 
+//					left 		: event.clientX + scrollLeft + "px", 
+//					top 		: event.clientY + scrollTop + "px"
+//				});
+//				Element.show(_menu);
+			}
+			_replaceContext = false;
+
+			return false;
+		}
+	}
+}
+
+iup.popup.MenuBuilder = function(oCfg){
+	var cfg = {
+		build : oCfg.build		//	REQUIRED function(event, target){return element;}
+	};
+	
+	iup.popup.MenuBuilder.addMenuOption = function(menu, option, cell){	// static void
+		var menuOption = document.createElement("div");
+		menuOption.innerHTML = typeof option.text == "function" ? option.text(cell) : option.text;
+//		Element.update(menuOption, typeof option.text == "function" ? option.text(cell) : option.text);
+		$(menuOption).addClass(option.label ? "menu-label" : "menu-option");
+//		Element.addClassName(menuOption, option.label ? "menu-label" : "menu-option");
+		if ( !option.label && typeof option.action == "function"){
+			$(menuOption).bind("click" , function(){ option.action(option, cell);});
+//			Element.observe(menuOption, "click" , function(){ option.action(option, cell);});
+		}
+		menu.appendChild(menuOption);
+	}
+	
+	this.build = cfg.build;
+}
+
+iup.popup.GridMenuBuilder = function(oCfg){
+	var cfg = {
+		headerOptions	: oCfg.headerOptions,	//	[{text : str/func(cell), label : true/false, action : func(option, cell)}...] or function(cell){return options}
+		cellOptions		: oCfg.cellOptions,		//	[{text : str/func(cell), label : true/false, action : func(option, cell)}...] or function(cell){return options}
+		title			: oCfg.title			// 	str/function(cell){return string}	
+	}
+	
+	var menuBuilder = new iup.popup.MenuBuilder({
+		build : function (event, target){
+			var cell = getParentCell(target);
+			if ($(cell).hasClass("scroll-header")){
+				return null;
+			}
+			if (cell != null ){
+				var menu = document.createElement("div");
+				$(menu).addClass("menu");
+				if ( typeof cfg.title != "undefined") {
+					var header = document.createElement("div");
+					var title = typeof cfg.title == "function" ? cfg.title(cell) : cfg.title;
+					header.innerHTML = title;
+					$(header).addClass(header, "menu-header");
+					menu.appendChild(header);
+				}
+
+				var options = [];
+				if (cell.type == "header"){
+					if (typeof cfg.headerOptions == "function"){
+						options = cfg.headerOptions(cell);
+					} else {
+						options = cfg.headerOptions;
+					}
+				} else {
+					if (typeof cfg.cellOptions == "function"){
+						options = cfg.cellOptions(cell);
+					} else {
+						options = cfg.cellOptions;
+					}
+				}
+				
+				for (var i = 0; i < options.length; i++){
+					iup.popup.MenuBuilder.addMenuOption(menu, options[i], cell);
+				}
+				return menu;
+			}
+
+			return null;
+		}
+	})
+	this.build = menuBuilder.build;
+	
+	function getParentCell(myobj) {
+		var curobj = myobj;
+		while(curobj !== undefined && curobj != document.body)
+		{
+		   if( curobj.tagName.toLowerCase() == "td" || curobj.tagName.toLowerCase() == "th" ){
+			   return curobj;
+		   }
+		   curobj = curobj.parentNode;
+		}
+		return null;
+	}
+}

@@ -124,7 +124,7 @@ return {
 			});
 			
 			ret.onchange = function() {
-				self.events.fireEvent("changed", cfg.parser(ret.value, self.field.get()), self.field.getOriginalValue(), true);
+				self.events.fireEvent("changed", cfg.parser(ret.value, self.field.get()), self.field.getOriginalValue(), false);
 			};
 			
 			if (cfg.placeholder) {
@@ -222,9 +222,11 @@ return {
 		//	this._textHolder.innerHTML = val;
 		},
 		setValue : function(val, bSilent) {
-			this._updateEl(this._getInput(), this.cfg.renderer(val));
-//			this._textHolder.innerHTML =  this.cfg.renderer(val);
 			this.events.fireEvent("changed", val, this.field.getOriginalValue(), bSilent);
+			//this._updateEl(this._getInput(), this.cfg.renderer(val));
+			this.refresh()
+//			this._textHolder.innerHTML =  this.cfg.renderer(val);
+			
 		},
 		getValue : function() {
 			return this.getField().get();
@@ -1281,7 +1283,9 @@ iup.utils.createComponent('iup.form.FieldSet', iup.layout.Panel, {
 		},
 		reset : function() {
 			this._eachField(function(field) {
-				field.setValue(field.getField().getOriginalValue());
+				field.getField().rollback();
+				field.refresh();
+				//field.setValue(field.getField().getOriginalValue());
 			});
 		}/*,	
 		loadData : function(data) {

@@ -145,11 +145,14 @@ td {
 	border-bottom : 0px;
 }
 
-.grid-dirty-value{
-	background-image: url(../images/dirty_field.png);
-	background-position: top right;
-	background-repeat: no-repeat;
+.grid-dirty-value::after{
+	content : "*";
+	color : #b55;
+	position : absolute;
+	right : 0px;
+	top : 0px;
 }
+
 
 .grid-resize-column{
 	cursor:col-resize !important;

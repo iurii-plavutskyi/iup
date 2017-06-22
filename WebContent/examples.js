@@ -8,7 +8,7 @@ function ExamplesPanel() {
 			{id : 1, name:"Name1", lastName:"LastName1", creation : Date.parse('06/05/2005')},
 			{id : 2, name:"Name2", lastName:"LastName2", creation : Date.parse('06/05/1985')},
 			{id : 3, name:"Name3", lastName:"LastName3", creation : Date.parse('06/05/1995')},
-			{id : 4, name:"Name4", lastName:"LastName4", creation : Date.parse('06/05/2000')}
+			{id : 4, name:"Name4", lastName:"LastName4", creation : Date.parse('06/05/2000'), children : [{name : 'ccc'}]}
 		]
 	});
 	var grid = new iup.layout.Grid({
@@ -29,7 +29,12 @@ function ExamplesPanel() {
 					var year = (now.getMonth() + month > val.getMonth()) ? 1 : 0;
 					return now.getFullYear() - val.getFullYear() + year;
 				}
-			}       
+			},
+			{header : 'Children', key : 'children', renderer : function(val){
+				return val.getData()
+						.map(function(val){return val.get('name');})
+						.join(', '); 
+			}}
 		],
 		emptyText : "no data",
 		store : store,
@@ -38,7 +43,7 @@ function ExamplesPanel() {
 	
 	var apply = new iup.Button({
 		text : 'Apply',
-		handler : function(){editor.getRecord().commit();}
+		handler : function(){console.log(editor.getRecord().value()); editor.getRecord().commit();}
 	})
 	var reset = new iup.Button({
 		text : 'Cancel',
@@ -52,7 +57,7 @@ function ExamplesPanel() {
 		fields : [
 			{name : 'id', label : "ID:", readonly : true},
 			{name : 'name', label : "Name:", required : true},
-			{name : 'creation', type : 'date', label : 'Creation:', showTime : true},
+			{name : 'creation', type : 'date', label : 'Creation:'/*, showTime : false*/},
 			{
 				type : 'multiselect',
 				grid		: new iup.layout.Grid({
@@ -68,7 +73,8 @@ function ExamplesPanel() {
 				}),
 				name 		: 'children',
 				label 	 	: 'Children',
-				displayField: 'name'
+				displayField: 'name',
+				sameVal : function(rec1,rec2) {return rec1.get('name') == rec2.get('name')}
 			}
 		],
 		controls : {

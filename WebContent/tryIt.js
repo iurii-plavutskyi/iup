@@ -200,13 +200,13 @@ function SamplesPanel() {
 		})
 		
 		var borderPanel = new iup.layout.BorderPanel({
-			layoutConfig : {top : 150, left : 500},
-			splitter : ['top', 'left'],
-			top 	: new iup.layout.ScrollPanel({
+			layoutConfig : {/*top : 150,*/ left : 500},
+			splitter : /*['top', */'left'/*]*/,
+			/*top 	: new iup.layout.ScrollPanel({
 				style : {minWidth : '1000px'},
 				scroll : iup.layout.ScrollPanel.SCROLL_BOTH,
 				content : [description]
-			}),
+			}),*/
 			left 	: new iup.layout.BorderPanel({
 				layoutConfig : {
 					bottom : 30

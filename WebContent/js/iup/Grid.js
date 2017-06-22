@@ -268,11 +268,14 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 							? column.renderer(rawValue, record, column, td, index) 
 									: rawValue;
 						
-			//	var dirty = record.hasField(column.key) && record.isDirty(column.key);
+				var dirty = false;
+				try {
+					dirty = record.getField(column.key).isDirty();
+				} catch (e) {console.log(e);}
 				var cell = _buildCell.apply(this, [value, className]);
 				
 				td.appendChild(cell);
-			//	if (dirty) { $(td).addClass(' grid-dirty-value'); }
+				if (dirty) { $(td).addClass(' grid-dirty-value'); }
 				tr.appendChild(td);
 			}
 			return tr;
@@ -561,29 +564,22 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 					return colGroup;
 				}
 				
-				var menuButton = iup.utils.createEl('div', {
-					className : 'glyphicon glyphicon-chevron-down',
-				  	style : {
-					    position : 'absolute',
-					    top : '1px',
-					    right : '1px',
-					    border : '1px solid ddd',
-					    borderRadius : '0px 0px 0px 5px',
-					    width : '20px',
-					    height : '14px',
-					    backgroundColor : '#fff',
-					    zIndex : 10,
-					    color : '#999',
-					    fontSize : '12px',
-					    textAlign : 'center'
-				  	}
-				});
+				/*    border : '1px solid ddd',
+				    borderRadius : '0px 0px 0px 5px',
+				    width : '20px',
+				    height : '14px',
+				    backgroundColor : '#fff',
+				    zIndex : 10,
+				    color : '#999',
+				    fontSize : '12px',
+				    textAlign : 'center'
+			  	}*/
 				
 				var wrapper = iup.utils.createEl("div", {
 					style : {
 						position : "relative"
 					},
-					content : [container/*, menuButton*/]
+					content : [container]
 				});
 				
 				this._el = wrapper;
@@ -716,7 +712,7 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 				}
 				
 			},
-			selectRecords : function(records, additive) {
+			selectRecords : function(selected, additive) {
 				var self = this;
 				if (!additive) {
 					$.each(self._selectedRows, function(idx, selection){
@@ -726,20 +722,33 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 				}
 				
 				var rows = this._body.getElementsByTagName("tr");
-				for (var j = 0; j < records.length; j++) {
+				if (typeof selected == 'function') {
 					for (var i = 0; i < rows.length; i++ ) {
-						if (rows[i].record === records[j]) {
-							var row = rows[i];
-							if (! $(row).hasClass("grid-selected-row")) {
-								$(row).addClass("grid-selected-row");
-								self._selectedRows.push(row);
+						if (selected(rows[i].record)) {
+							select(rows[i]);
+						}
+					}
+				} else {
+					for (var j = 0; j < selected.length; j++) {
+						for (var i = 0; i < rows.length; i++ ) {
+							if (rows[i].record === selected[j]) {
+								select(rows[i]);
+								break;
 							}
-							break;
 						}
 					}
 				}
 				
 				self.events.fireEvent("select", self._selectedRows);
+				
+				function select(row) {
+
+					if (! $(row).hasClass("grid-selected-row")) {
+						$(row).addClass("grid-selected-row");
+						self._selectedRows.push(row);
+					}
+					
+				}
 			},
 			getSelectedRows : function() {
 				return this._selectedRows;

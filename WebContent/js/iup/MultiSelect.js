@@ -2,6 +2,8 @@
 
 
 iup.form.MultiselectField = function(oCfg) {
+	var sameVal = oCfg.sameVal || function(val1, val2) {return val1 === val2;}
+	var converter = oCfg.converter || function(record) {return record.value();}
 	
 	var grid = oCfg.grid;
 	
@@ -23,7 +25,9 @@ iup.form.MultiselectField = function(oCfg) {
  		label 		: oCfg.label,
  		width		: oCfg.width,
  		renderer	: oCfg.renderer	|| function(val) {
+		//	val && console.log(val);
 			if (val) {
+				val = val.getData()
 				var values = [];
 				
 				for (var i = 0; i < val.length; i++) {
@@ -43,28 +47,44 @@ iup.form.MultiselectField = function(oCfg) {
 					var inputOffset = $(field.getEl()).offset();
 						inputOffset.top += $(field.getEl()).outerHeight();
 						$(win.getEl()).offset(inputOffset);
-					var currValue = field.getField().get();
-					grid.selectRecords(currValue || []);
+					var currValue = field.getField()._value.getData();
+					var selected = [];
+					var allRecords = grid.getStore().getData();
+					for (var i = 0, n = currValue.length; i < n; i++) {
+						for (var j = 0, m = allRecords.length; j < m; j++) {
+							if (sameVal(currValue[i], allRecords[j])) {
+								selected.push(allRecords[j]);
+								
+								break;
+							}
+						}
+					}
+					console.log(selected, currValue, allRecords);
+					grid.selectRecords(selected || []);
 				}
  			},
  			{
  				icon : 'img/ic_del.png', 
  				handler : function () {
-					field.setValue([]);
+					field.getField().set([]);
 				}
  			}
  		]
  	});
  	
 	ok.setHandler(function(){
-		var records = [];
+		var data = [];
 		var rows = grid.getSelectedRows();
 		
-		for (var i = 0; i < rows.length; i++) {
-			records.push(rows[i].record);
-		}
 		
-		field.setValue(records);
+		
+		//field.getField()._value.clear(true);
+		for (var i = 0; i < rows.length; i++) {
+			data.push(converter(rows[i].record));
+		}
+		field.getField().set(data);
+		field.refresh();
+		//field.getValue().loadData(data);
 		win.hide();
 	});
 	

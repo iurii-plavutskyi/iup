@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+	<link rel="stylesheet" href="css/iup.css" />
+	<link rel="stylesheet" href="css/bootstrap.css" />
+	
+	<script type="text/javascript" src="js/adds/jquery-1.11.0.min.js"></script>
+	
+	<script type="text/javascript" src="js/iup/base.js"></script>
+	<script type="text/javascript" src="js/iup/Layout.js"></script>
+	<script type="text/javascript" src="js/iup/Button.js"></script>
+	<script type="text/javascript" src="js/iup/Grid.js"></script>
+	<script type="text/javascript" src="js/iup/Data.js"></script>
+	<script type="text/javascript" src="js/iup/DnD.js"></script>
+	<script type="text/javascript" src="js/iup/Window.js"></script>
+	<script type="text/javascript" src="js/iup/DB.js"></script>
+	<script type="text/javascript" src="js/iup/Form.js"></script>
+	<script type="text/javascript" src="js/iup/ComboBox.js"></script>
+	<script type="text/javascript" src="js/iup/DateField.js"></script>
+	<script type="text/javascript" src="js/iup/PaginationBar.js"></script>
+	<script type="text/javascript" src="js/iup/Singletons.js"></script>
+	
+	<script type="text/javascript" src="js/iup/Menu.js"></script>
+	
+<script type="text/javascript"> 
+var menuButton = iup.utils.createEl('div', {
+	className : 'glyphicon glyphicon-chevron-down',
+  	style : {
+//	    position : 'absolute',
+//	    top : '1px',
+//	    right : '1px',
+	    border : '1px solid ddd',
+	    borderRadius : '0px 0px 0px 5px',
+	    width : '20px',
+	    height : '14px',
+	    backgroundColor : '#fff',
+//	    zIndex : 10,
+	    color : '#999',
+	    fontSize : '12px',
+	    textAlign : 'center'
+  	}
+});
+
+var menu = new iup.popup.Menu({
+	position : 'left-top',
+	type : 'horizontal',
+	content : [ 
+		{
+			text : 'add',
+			handler : function () {console.log('add');} 
+			
+		},
+		new iup.popup.Menu({
+			type : 'vertical',
+			position : 'bottom-right',
+			anchor : new iup.Button({
+				text : 'edit',
+				handler : function () {console.log('edit');} 
+				
+			}),
+			content : [ 
+			    new iup.Button({
+					text : 'add',
+					handler : function () {console.log('add');} 
+					
+				})
+			]
+		}),
+		new iup.popup.Menu({
+			position : 'bottom-left',
+			anchor : 'REMOVE',
+			content : [ 
+			    new iup.popup.Menu({
+					position : 'bottom-left',
+					anchor : new iup.Button({
+						text : 'remove',
+						handler : function () {console.log('remove');} 
+						
+					}),
+					content : [ 
+					    new iup.Button({
+							text : 'add1',
+							handler : function () {console.log('add');} 
+							
+						}),
+						new iup.Button({
+							text : 'edi1',
+							handler : function () {console.log('add');} 
+							
+						})
+					]
+				}),
+				new iup.popup.Menu({
+					position : 'bottom-left',
+					anchor : new iup.Button({
+						text : 'remove',
+						handler : function () {console.log('remove');} 
+						
+					}),
+					content : [ 
+					    new iup.Button({
+							text : 'add2',
+							handler : function () {console.log('add');} 
+							
+						}),
+						new iup.Button({
+							text : 'edit2',
+							handler : function () {console.log('add');} 
+							
+						})
+					]
+				})
+			]
+		})
+	]
+});
+
+
+var menu2 = new iup.popup.Menu({
+/*	position : 'left-top',
+	type : 'horizontal',
+	content : [  
+		new iup.popup.Menu({*/
+			position : 'right-bottom',
+			type : 'horizontal',
+			anchor : menuButton,
+			content : [ 
+				{
+					text : 'add',
+					handler : function () {console.log('add');} 
+					
+				},
+	
+				new iup.popup.Menu({
+					position : 'bottom-left',
+					anchor : new iup.Button({
+						text : 'remove',
+						handler : function () {console.log('remove');} 
+						
+					}),
+					content : [ 
+					    new iup.Button({
+							text : 'add2',
+							handler : function () {console.log('add');} 
+							
+						}),
+						new iup.Button({
+							text : 'edit2',
+							handler : function () {console.log('add');} 
+							
+						})
+					]
+				})
+			]
+		/*})
+	]*/
+});
+
+/*var s = menu.getEl().style;
+s.position = 'absolute';
+s.top = '1px';
+s.right = '1px';
+s.zIndex = 10;*/
+
+console.log( menu.getEl());
+$(function() {
+	new iup.layout.ViewPort({
+		content : new iup.layout.BorderPanel({
+			layoutConfig : {top : 50},
+			splitter : "top",
+			top : new iup.layout.Toolbar({
+				content :[
+menuButton/*menu2.getEl()*/,
+'->',
+				          menu.getEl()
+				          ]
+			})
+		})
+	})
+});
+</script>
+</head>
+<body>
+
+</body>
+</html>

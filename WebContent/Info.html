@@ -41,6 +41,14 @@
     				{key : 'value', header : 'Value'}
     			]
     		
+    		});
+    		new iup.popup.ContextMenu({
+    			target		: testPanel.getEl(), 		// REQUIRED element to override the context menu for  
+    			menuBuilder : new iup.popup.GridMenuBuilder({
+    				headerOptions	:[{text : 'text1', label : true}, {text : 'text2', label : false}],	//	[{text : str/func(cell), label : true/false, action : func(option, cell)}...] or function(cell){return options}
+    				cellOptions		: [{text : 'text11', label : true}, {text : 'text12', label : false}],		//	[{text : str/func(cell), label : true/false, action : func(option, cell)}...] or function(cell){return options}
+    				title			: 'title'			// 	str/function(cell){return string}	
+    			})
     		})
     		
     		new iup.layout.ViewPort({

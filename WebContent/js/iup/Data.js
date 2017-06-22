@@ -177,7 +177,7 @@ iup.data.Store = function(oCfg){
         eventManager.fireEvent("dataChanged", data, store);
     };
     
-    this.addRecord = function(record, idx) {
+    this.addRecord = function(record, idx, silent) {
         var alreadyAddedIdx = data.indexOf(record);
 
         if (alreadyAddedIdx < 0) {
@@ -196,8 +196,10 @@ iup.data.Store = function(oCfg){
             if (sortOrder) {
                 sortLocally();
             } 
-            eventManager.fireEvent("load", data, store);
-            eventManager.fireEvent("dataChanged", data, store);
+			if (!silent) {
+				eventManager.fireEvent("load", data, store);
+				eventManager.fireEvent("dataChanged", data, store);
+			}
         }
     };
     
@@ -208,6 +210,17 @@ iup.data.Store = function(oCfg){
         eventManager.fireEvent("load", data, store);
         eventManager.fireEvent("dataChanged", data, store);
     };
+	
+	this.clear = function(silent) {
+        var idx = data.indexOf(record);
+        data.splice(0, data.length);
+		
+        if (!silent) {
+			eventManager.fireEvent("load", data, store);
+			eventManager.fireEvent("dataChanged", data, store);
+		}
+    };
+	
      
     function init(){
         for(var idx in cfg.handlers){
@@ -604,6 +617,7 @@ iup.utils.createComponent('iup.data.StoreField', iup.data.Field,
             }
         },
         rollback : function(bSilent) {
+		console.log(this._originalValue);
             this._value.loadData(this._originalValue);
             this._dirty = false;
             if (!bSilent) {
