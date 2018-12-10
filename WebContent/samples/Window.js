@@ -5,7 +5,8 @@ new iup.popup.Window({
 	modal : false,
 	minHeight: 100,
 	minWidth : 200,
-	minimizable : true
+	minimizable : true,
+	closable : true
 	
 }).show();
 
@@ -14,6 +15,7 @@ new iup.popup.Window({
 	width: 200,
 	height : 150,
 	minimizable : true,
-	resizeModel : 'border'
+	resizeModel : 'border',
+	closable : true
 }).show();
 

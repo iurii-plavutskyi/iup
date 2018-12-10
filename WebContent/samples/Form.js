@@ -8,20 +8,20 @@ return new iup.form.FieldSet({
             placeholder : 'input value'
         },
         {
-            name : 'name',
+            name : 'active',
             type : 'checkbox',
-            label: 'Check:'/*,
-            text : 'TEXT'*/
+            label: 'Check:',
+            text : 'TEXT'
         },
         {
-            name : 'name',
+            name : 'age',
             type : 'number',
             label: 'Num:',
             required : true,
             placeholder : 'integer only'
         },
         {
-            name : 'name',
+            name : 'spinerValue',
             type : 'spinbox',
             maxVal : 10,
             minVal : -5,
@@ -36,10 +36,10 @@ return new iup.form.FieldSet({
                     {val : 'abcd'},
                     {val : 'bcd'},
                     {val : 'cde'}
-                ],
-                autoLoad : false
+                ]
             }),
             label : 'Combo',
+	    name: 'combo.value',
             valueField 	: 'val',
 	    displayField: 'val'
         }

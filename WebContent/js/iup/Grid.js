@@ -268,14 +268,16 @@ iup.utils.createComponent("iup.layout.Grid", iup.layout.Panel,
 							? column.renderer(rawValue, record, column, td, index) 
 									: rawValue;
 						
-				var dirty = false;
-				try {
-					dirty = record.getField(column.key).isDirty();
-				} catch (e) {console.log(e);}
 				var cell = _buildCell.apply(this, [value, className]);
 				
 				td.appendChild(cell);
-				if (dirty) { $(td).addClass(' grid-dirty-value'); }
+				
+				var dirty = false;
+				if (column.key) {
+					dirty = record.getField(column.key).isDirty();
+					if (dirty) { $(td).addClass(' grid-dirty-value'); }
+				}
+				
 				tr.appendChild(td);
 			}
 			return tr;

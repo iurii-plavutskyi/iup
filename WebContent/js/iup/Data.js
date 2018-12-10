@@ -390,6 +390,16 @@ iup.data.Record = function(obj, model) {
     var self = this;
     var record = {};
 //    var data = obj;
+    if (! model) {
+	model = {
+            fields : []    
+        };
+        
+	for(var i in obj){
+	    model.fields.push({name : i});
+	}
+        
+    }
     if (! model.fields) {
         model = window[model];
     } 

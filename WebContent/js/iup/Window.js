@@ -642,7 +642,9 @@ iup.popup.Mask = function(oCfg) {
 	};
 	
 	this.hide = function() {
-		mask.parentNode.removeChild(mask);
+		if (mask.parentNode) {
+			mask.parentNode.removeChild(mask);
+		}
 //		mask.style.display = "none";
 	};
 	
